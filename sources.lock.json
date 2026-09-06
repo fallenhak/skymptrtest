@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "researchedOn": "2026-09-05",
+  "skymp": {
+    "repository": "skyrim-multiplayer/skymp",
+    "url": "https://github.com/skyrim-multiplayer/skymp.git",
+    "commit": "756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3",
+    "inspectedBranch": "main",
+    "localCheckout": ".research/upstream-skymp",
+    "skyrimPlatformVersion": "2.9.0",
+    "vcpkgCommit": "cb2981c4e03d421fa03b9bb5044cd1986180e7e4"
+  },
+  "customSkills": {
+    "repository": "Exit-9B/CustomSkills",
+    "url": "https://github.com/Exit-9B/CustomSkills.git",
+    "commit": "8be7055f2483a261e0c377e2e8fc04b34116c68f",
+    "localCheckout": ".research/custom-skills",
+    "version": "3.2.0",
+    "role": "Research candidate for native Skyrim skill trees; not integrated"
+  },
+  "serverArtifact": {
+    "runId": "33943379757",
+    "runUrl": "https://github.com/skyrim-multiplayer/skymp/actions/runs/33943379757",
+    "name": "server-dist",
+    "observedExpiresOn": "2026-12-04",
+    "nativeSha256": "D3F81D39532ECD5012BF40B80C91E6923BD0800065C6DA61BD51E67BB3A964A6",
+    "cacheDirectory": ".research/artifacts/756fb86/server-dist",
+    "runtimeDirectory": ".local/skymp-756fb86/server",
+    "testedNodeVersion": "v24.11.1"
+  }
+}

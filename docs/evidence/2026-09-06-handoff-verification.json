@@ -1,0 +1,33 @@
+{
+  "verifiedOn": "2026-09-06",
+  "initialServerSetupOn": "2026-09-05",
+  "scope": "Source restore and server startup in a separate clean workspace on the same Windows host",
+  "nodeVersion": "v24.11.1",
+  "skympCommit": "756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3",
+  "customSkillsCommit": "8be7055f2483a261e0c377e2e8fc04b34116c68f",
+  "ciRunId": "33943379757",
+  "artifact": "server-dist",
+  "nativeSha256": "D3F81D39532ECD5012BF40B80C91E6923BD0800065C6DA61BD51E67BB3A964A6",
+  "checks": {
+    "powershellSyntax": "passed",
+    "nodeScriptSyntax": "passed",
+    "pinnedSourceRestore": "passed",
+    "freshWorkspaceArtifactPreparation": "passed",
+    "nativeGamemodeReady": true,
+    "manifestVersionMajor": 1,
+    "manifestModNames": ["Skyrim.esm", "Update.esm", "Dawnguard.esm", "HearthFires.esm", "Dragonborn.esm"],
+    "manifestPositiveSizesAndIntegerCrc32": true,
+    "gamePort": 7777,
+    "httpPort": 3000,
+    "testProcessStopped": true
+  },
+  "notTested": [
+    "Another physical computer",
+    "Skyrim game-client or two-player connection",
+    "Native C++ source build and upstream unit tests",
+    "Client load-order matching and fully local login/UI flow",
+    "Character persistence across game reconnect and server restart",
+    "Perk selection, synchronization or effects",
+    "Custom Skills Framework integration"
+  ]
+}

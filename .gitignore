@@ -1,0 +1,11 @@
+# Reproducible source checkouts, downloaded binaries, machine settings and saves.
+/.research/
+/.local/
+
+# Local credentials and generated files must not enter the handoff repository.
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
+*.log
