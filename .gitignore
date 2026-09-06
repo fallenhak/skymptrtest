@@ -6,6 +6,18 @@
 .env
 .env.*
 !.env.example
-node_modules/
 __pycache__/
 *.log
+
+# Upstream build and editor state.
+build
+.clang-tidy
+.linter
+node_modules
+.vscode
+.cache
+.vs
+
+# vim
+.*.swp
+skyrim_data_files/

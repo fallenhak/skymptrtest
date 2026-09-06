@@ -6,7 +6,8 @@
     "url": "https://github.com/skyrim-multiplayer/skymp.git",
     "commit": "756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3",
     "inspectedBranch": "main",
-    "localCheckout": ".research/upstream-skymp",
+    "localCheckout": ".",
+    "role": "Tracked development source; commit is the imported upstream baseline",
     "skyrimPlatformVersion": "2.9.0",
     "vcpkgCommit": "cb2981c4e03d421fa03b9bb5044cd1986180e7e4"
   },
@@ -17,6 +18,12 @@
     "localCheckout": ".research/custom-skills",
     "version": "3.2.0",
     "role": "Research candidate for native Skyrim skill trees; not integrated"
+  },
+  "clientArtifact": {
+    "runId": "33943379757",
+    "name": "dist",
+    "cacheDirectory": ".research/artifacts/756fb86/dist",
+    "profilesDirectory": ".local/skymp-756fb86/clients"
   },
   "serverArtifact": {
     "runId": "33943379757",

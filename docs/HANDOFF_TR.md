@@ -1,10 +1,10 @@
-# SkyMP TR — kişi/model devir belgesi
+# SkyMP TR — ortak proje durumu
 
-Son güncelleme: **6 Eylül 2026**. Araştırma ve ilk sunucu denemesi 5 Eylül'de yapıldı; devir betikleri ve temiz klasördeki sunucu 6 Eylül'de doğrulandı. Bu belge önceki konuşma olmadan devam etmek içindir.
+Son güncelleme: **6 Eylül 2026**. Geliştirme bu projede devam ediyor; bu belge birden fazla kişi/modelin aynı bağlamla çalışmasını sağlar. Araştırma ve ilk sunucu testi üzerine artık tam kaynak fork'u, istemci derlemesi, manifest düzeltmesi ve ortak test düzeni kuruldu. [Ekip akışı](TEAM_WORKFLOW_TR.md).
 
 ## 1. Kullanıcının istediği çalışma
 
-- İki arkadaş SkyMP'yi yerelde çalıştırıp açık kaynak üzerinde geliştirme yapmak istiyor. Çalışma deposu **fallenhak/skymptrtest**; devir sırasında boş ve private olarak bulundu. Mevcut görünürlük korunuyor.
+- İki arkadaş SkyMP'yi yerelde çalıştırıp açık kaynak üzerinde geliştirme yapmak istiyor. Ortak kaynak deposu **fallenhak/skymptrtest**; private görünürlük korunuyor. Belgeler geliştirmeye katılmayı kolaylaştırıyor; çalışma sürüyor.
 - Kullanıcı Faalgrin'de oynuyor; fikir Keizaal deneyiminden de doğmuş. Bu sunucuların özel kaynaklarına erişim yok. Hedef onların paketlerini kopyalamak veya var olan sunucularını değiştirmek değil; açık SkyMP'de eksik/sorunlu davranışları deneyip geliştirmek.
 - Kullanıcı bu sunucuların güncel oyun sürümünde çalıştığını bildirdi. Eski README'nin sürüm listesi uyumsuzluk kanıtı değildir; downgrade kararı alınmadı.
 - Sıra: **oynanabilir yerel altyapı → gerçekten çalışan perkler → RP'ye uygun denge ve meslekler**. Önceki bash/kilit adayları bekleme listesine alındı.
@@ -17,14 +17,17 @@ Custom Skills Framework kullanımı, ilk demircilik deneyi ve üç perkli madenc
 
 | İş | Durum ve sınırı |
 | --- | --- |
-| SkyMP ve CSF kaynak incelemesi | Tam commit'lere sabitlendi; iki araştırma kopyası değiştirilmedi |
+| Kaynak fork'u | SkyMP kodu kökte, 2.358 upstream commit'i geçmişte; araştırma kopyalarından bağımsız olarak değişiklikler bu repoda izleniyor |
 | Resmi Windows sunucu çıktısı | CI commit'i kontrol edilerek indirildi; native dosyanın SHA-256 değeri kaydedildi |
 | Yerel sunucu hazırlama | İki oyuncu kapasitesi, offline giriş, NPC kapalı, dosya tabanlı kayıt, HTTP loopback |
 | Başlangıç testi | Native modül/gamemode hazır; beş ESM için HTTP manifesti doğru biçimde dönüyor |
 | Tekrarlanabilirlik | Betikler ayrı ve temiz bir klasörde aynı bilgisayarda kaynakları indirdi, sunucuyu hazırladı; bu sunucunun testi geçti |
-| İstemci ve oyun kurulumu | SKSE/Platform/SkyMP istemcisi bu çalışma kapsamında kurulmadı; oyun dosyaları değiştirilmedi |
+| TypeScript istemci | Kaynaktan webpack derlemesi ve 14 manifest regresyon testi geçti |
+| Yerel manifest düzeltmesi | `server-http-url` doğrudan sunucu erişimi sağlar; hatalı/ulaşılamayan manifest artık boş mod listesi gibi kabul edilmez |
+| İstemci paketi | Resmi native çıktılar ve yerel JS derlemesi player-1 klasöründe hazır; oyun dosyaları değiştirilmedi |
+| Oyun ön koşulları | 1.7.104 için SKSE loader/runtime, Address Library dosyası ve `Data/Platform/UI/index.html` eksik bulundu |
 | İki oyunculu oyun | Bağlantı, hareket, envanter, hücre geçişi ve yeniden giriş testi yapılmadı |
-| Kaynak derleme | Yapılmadı; C++ birim testleri ve CTest çalıştırılmadı |
+| Native derleme | C++ derlemesi, birim testleri ve CTest henüz çalıştırılmadı |
 | Perk sistemi | İnceleme/tasarım aşamasında; CSF kurulmadı, native menü veya sunucu perk protokolü uygulanmadı |
 
 Sunucunun başlaması tam oynanabilir altyapı anlamına gelmez. Mevcut gamemode yalnızca hazır olma işareti üretir; RP ekonomisi, karakter ekranı veya meslek içeriği sağlamaz. Test sonunda başlatılan süreç kapatıldı; sürekli çalışan bir hizmet kurulmadı.
@@ -33,21 +36,24 @@ Makineye özgü ham çalışma dosyaları `.local` altında kalır. Taşınabili
 
 ## 3. Depo ve dosyalar nasıl devam ettirilir?
 
-Bu GitHub deposu mevcut devir belgelerini ve bize ait kurulum/test betiklerini içerir. Açık kaynakların tamamı buraya yeniden kopyalanmadı; [sources.lock.json](../sources.lock.json) ve `restore-sources.ps1` aynı araştırma kaynaklarını yeniden getirir. Henüz upstream geçmişini taşıyan bir native geliştirme fork'u yoktur.
+Bu GitHub deposu artık SkyMP'nin tam kaynak ağacını ve upstream geçmişini içerir. [sources.lock.json](../sources.lock.json) içeri aktarılan tabanı/native çıktıları sabitler. `restore-sources.ps1` SkyMP geçmişini doğrular ve gerekirse CSF araştırma kopyasını indirir. Kaynak geliştirme, kökteki `skymp5-client`, `skymp5-server` ve `skyrim-platform` dizinlerinde yapılır.
 
 | Yol | Anlamı |
 | --- | --- |
 | `sources.lock.json` | İki kaynak commit'i, vcpkg sabitlemesi, resmi CI çıktısı, native hash ve yerel klasörler |
-| `scripts/restore-sources.ps1` | Sabit commit'leri indirir; var olan farklı checkout'u sıfırlamaz; alt modülleri kurmaz |
+| `scripts/restore-sources.ps1` | Kökte upstream atasını doğrular; CSF araştırma kaynağını getirir; alt modülleri kurmaz |
+| `scripts/build-client.ps1` | Yarn 1.22.22 ve lockfile ile TypeScript istemciyi derler; oyuna kopyalamaz |
+| `scripts/prepare-local-client.ps1` | Native artifact + derlenen JS + oyuncuya özgü offline ayarları ayrı klasörde hazırlar |
+| `scripts/check-client-prerequisites.ps1` | Oyun EXE sürümüne göre SKSE/Address Library ve UI dosyalarını kontrol eder |
 | `scripts/prepare-local-server.ps1` | Resmi çıktıyı indirir, CI commit'ini ve native hash'i doğrular; kendi ESM yollarınızla ayar üretir |
 | `scripts/start-local-server.ps1` | Hazırlanmış sunucuyu doğru çalışma dizininde başlatır |
 | `scripts/test-local-server.mjs` | Native hazır olma ve manifest testi; sonunda kendi sürecini kapatır |
-| `.research/upstream-skymp` | İncelenen SkyMP; Git dışında, sığ araştırma checkout'u |
+| `.research/upstream-skymp` | İlk araştırma kopyası; artık geliştirme yeri değil |
 | `.research/custom-skills` | İncelenen CSF; Git dışında, sığ araştırma checkout'u |
 | `.research/artifacts/756fb86/server-dist` | Orijinal CI indirme önbelleği; Git dışında |
 | `.local/skymp-756fb86/server` | Makineye özgü sunucu ayarları, çalışma dosyaları ve dünya; Git dışında |
 
-**Native geliştirmeye geçerken:** gerçek değişiklikleri yalnızca `.research` altında bırakmayın; bu deponun normal commit'i onları taşımaz. Önce upstream geçmişini ve lisanslarını koruyan, GitHub'a gönderilecek kaynak çalışma dalını/checkout'unu kurun. Bu devir deposu ile native kaynak fork'unun düzenini açıkça belgeleyin. Araştırma kopyalarını zorla sıfırlamayın veya `git add -f .research` ile iç içe repoları ve artifact'leri topluca eklemeyin. Şu anda taşınması gereken yerel C++/TS düzeltmesi yok.
+**Ortak geliştirme:** gerçek değişiklikler repo kökünde, `codex/...` dallarında veya ayrı worktree'lerde tutulur. Upstream uzak deposu `upstream`, ortak repo `origin` olur. PR'larda istemci derlemesi ve manifest testleri çalışır. Upstream'in özel secret/deploy varsayımları olan workflow'ları `.github/upstream-workflows` altında korunur. Araştırma önbelleği, indirilen native dosyalar ve dünya kayıtları commit edilmez.
 
 ## 4. Doğrulanan sürümler ve ortam
 
@@ -69,7 +75,7 @@ Bu ortam değerleri gözlem tarihine aittir. Başka makinede veya sonraki sürü
 
 **Ağ ve giriş:** Oyun portu `7777/UDP`; varsayılan HTTP kaynak servisi `3000/TCP`. Oyun portu değişirse HTTP portu `port + 1`. Hazırlanan HTTP servisi `127.0.0.1` üzerinde; arkadaş erişimi için henüz hazır değil. Offline girişte istemciler farklı sayısal `gameData.profileId` kullanmalı; aynı kimlik aynı karakteri seçebilir.
 
-**Offline sınırı:** `offlineMode` bütün dış istekleri kapatmaz. Boş `master` varsayılan gateway'e düşebilir. `server-info-ignore` sunucu bilgi sorgusunu atlasa da mod manifesti yolu ayrı. Tam yerel istemci akışı hâlâ doğrulanmalı. Load order uyuşmazlığını gizlemek yerine dosya/sıra eşleştirmesini çözün.
+**Offline sınırı:** `offlineMode` bütün dış istekleri kapatmaz. Yeni `server-http-url` ayarı mod manifestini doğrudan yerel HTTP sunucusundan alır; bu davranış 14 testle doğrulandı. `server-info-ignore` sunucu bilgi sorgusunu atlar. Bunlar hazırlanan istemci ayarlarına yazılır. Tam oyun içi akış hâlâ test edilmeli; load order uyuşmazlığı gizlenmez.
 
 **UI ve gamemode:** `BUILD_FRONT=ON` ayrı `skymp5-front` deposuna/PAT'e bağlı; anonim erişim 404 döndü. Bunun özel mi, kaldırılmış mı olduğu kesin değil. Güncel browser yolu `Data/Platform/UI/index.html`. Küçük yerel gamemode yazılabilir; özel RP sunucularının kaynak erişimi ön koşul değil. Giriş UI ihtiyacı ile kullanıcının native perk menüsü tercihi farklı konular.
 
@@ -83,11 +89,13 @@ Kaynak bağlantıları ve semboller [SOURCE_MAP_TR.md](SOURCE_MAP_TR.md) ve [PER
 
 ## 6. Sıradaki iş ve tamamlanma ölçütü
 
-**Bir sonraki görev oynanabilir altyapıdır.** Önce mevcut sunucuyu doğrulayın; aynı SkyMP commit'ine ait istemci paketini inceleyin. Oyuncunun gerçek oyun kopyasını/mod yöneticisi profilini ve SKSE/Platform eşleşmesini belirleyin. Gerekli istemci ayarları, mod manifesti ve giriş UI akışını yerel test profili için hazırlayın. Arkadaşın runtime/mod bilgisi henüz paylaşılmadı; ikinci oyuncu testi bu bilgi ve erişim gerektirir.
+**Devam eden görev oynanabilir altyapıdır.** İstemci paketi incelendi ve yerel derlememizle hazırlandı. Steam 1.7.104 kurulumu için SKSE 2.3.1 ve Address Library 13 resmi paketleri mevcut; Nexus indirmesi oturum açmayı gerektiriyor. Eksik native paketler ve yerel UI akışı tamamlanınca ayrı oyun test kurulumunda ilk bağlantı denenecek. Arkadaşın runtime/mod bilgisi henüz paylaşılmadı; ikinci oyuncu testi bu bilgi ve erişim gerektirir. [SKSE](https://skse.silverlock.org/), [Address Library](https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files).
 
 | Deney | Tamamlandı sayılma koşulu | Şu an |
 | --- | --- | --- |
 | Sunucu başlangıcı | Native hazır işareti + beş ESM manifesti | Geçti |
+| İstemci kodu | TypeScript derlemesi + yerel/gateway manifest testleri | Geçti |
+| İstemci dosyaları | Ayrı oyuncu paketi ve eksik native/UI dosyalarının kontrolü | Paket hazır; oyun kurulumu bekliyor |
 | İlk istemci | Bağlanma, karakter oluşturma/seçme, dünyaya girme | Bekliyor |
 | İki oyuncu | Farklı profil kimlikleri; birbirini görme ve hareket | Bekliyor |
 | Temel tutarlılık | Envanter/ekipman, sonradan katılma, hücreye dönme | Bekliyor |
@@ -104,6 +112,6 @@ Perk modeli için öneri: karakter başına XP, seviye, puan, rank ve veri sür�
 
 ## 8. Ortak geliştirme ve korunan bilgiler
 
-Arkadaşın GitHub kullanıcı adı henüz verilmedi; collaborator daveti gönderilmedi. Private repoyu klonlayabilmesi için sahibi erişim vermeli. Geliştirme betikleri ve belgeler taşındı; Bethesda ESM/BSA dosyaları, kişisel kayıtlar, dünya verisi, token'lar ve indirilmiş binary'ler Git'e eklenmedi. Sabitlemeler ve kurulum betikleri bunların yerine yeniden hazırlama yolunu sağlar.
+Repo sahibi arkadaşının GitHub erişimini kendisinin düzenleyeceğini belirtti; davet işlemi bu çalışmanın dışında. Kaynak kod, betikler ve belgeler ortak repoda izlenir. Bethesda ESM/BSA dosyaları, kişisel kayıtlar, dünya verisi, token'lar ve indirilmiş binary'ler Git'e eklenmez.
 
 SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisanslarıyla gelir; CSF kaynağı MIT. Kaynak geliştirirken mevcut lisans/telif dosyalarını koruyun. Ayrıntılı lisans bağlantıları teknik bağlam belgesindedir. Bu devir işlemi herhangi bir upstream PR'ı birleştirmedi, oyuna mod kurmadı veya mevcut RP sunucusunu değiştirmedi.

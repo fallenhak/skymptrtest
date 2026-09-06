@@ -1,6 +1,6 @@
 # SkyMP — yerel senkronizasyon geliştirme bağlamı
 
-İnceleme tarihi: **5 Eylül 2026**. Bu belge kaynak kodu, proje belgeleri, GitHub CI/issue bilgileri ve bilgisayardaki geliştirme araçlarının incelenmesine dayanır. Resmi Windows sunucu çıktısıyla yerel başlangıç testi geçti: native modül yüklendi, gamemode çalıştı ve beş temel ESM'nin HTTP manifesti doğrulandı. Kaynak derlemesi ve oyun içi bağlantı testi henüz yapılmadı. Güncel kurulum adımları `LOCAL_SERVER_TR.md`, kullanıcı tarafından belirlenen perk öncelikleri `PERK_SYSTEM_PLAN_TR.md` belgesinde.
+İlk inceleme: **5 Eylül 2026**; geliştirme güncellemesi: **6 Eylül 2026**. Resmi Windows sunucusuyla başlangıç testi geçti: native modül yüklendi, gamemode çalıştı ve beş temel ESM'nin HTTP manifesti doğrulandı. SkyMP kaynakları upstream geçmişiyle ortak repoya alındı; TypeScript istemci derlemesi ve 14 manifest testi geçti. Native C++ derlemesi ve oyun içi bağlantı testi henüz yapılmadı. Güncel durum [HANDOFF_TR.md](HANDOFF_TR.md), ekip düzeni [TEAM_WORKFLOW_TR.md](TEAM_WORKFLOW_TR.md), kurulum `LOCAL_SERVER_TR.md`, perk öncelikleri `PERK_SYSTEM_PLAN_TR.md` belgesinde.
 
 **Amaç ve kapsam**
 
@@ -13,7 +13,7 @@ Güncel öncelik: **çalışan yerel altyapı → Skyrim'in kendi menüsünde ge
 - Kaynak: [skyrim-multiplayer/skymp](https://github.com/skyrim-multiplayer/skymp).
 - Dal: `main`; commit: [`756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3`](https://github.com/skyrim-multiplayer/skymp/commit/756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3), 18 Ağustos 2026.
 - Skyrim Platform paket sürümü: `2.9.0`.
-- İnceleme kopyası: `C:\Users\kerim\Documents\ChatGPT\SkyMPTR Test\.research\upstream-skymp`. Bu, geçmişi sınırlı bir araştırma klonudur; `vcpkg` alt modülü indirilmedi. İleride ortak geliştirme için tam geçmişli fork kullanılmalı.
+- İlk inceleme kopyası `.research/upstream-skymp` altında korunur. Geliştirme artık repo kökündeki, upstream geçmişini içeren kaynaklarda yapılır. `vcpkg` alt modülü native derleme öncesinde hazırlanmalı.
 - `vcpkg` sabitlemesi: `cb2981c4e03d421fa03b9bb5044cd1986180e7e4`. Sistemden rastgele güncel vcpkg seçmek yerine depo sabitlemesi korunmalı.
 - Ana dal için [5 Eylül Windows Flatrim CI çalışması](https://github.com/skyrim-multiplayer/skymp/actions/runs/33943379757) başarılı. `dist` yaklaşık 177,6 MiB, `server-dist` yaklaşık 25 MiB; ayrıca Skyrim Platform ve istemci JS çıktıları mevcut. `server-dist` indirildi, commit eşleşmesi kontrol edildi ve yerelde başlangıç testi geçti. Paketteki CI test gamemode'u çalışma kopyasında değiştirildi. İstemci çıktıları henüz kurulmadı; artifact'lerin tam oynanabilir RP paketi olduğu varsayılmamalı.
 - [Linux CI çalışmasında](https://github.com/skyrim-multiplayer/skymp/actions/runs/32167532600) Ubuntu 24.04, Ubuntu 25.10 ve hazır bağımlılık imajı işleri başarılı; Arch işi CMake yapılandırmasında başarısız. Toplam kırmızı durum bütün Linux sunucu derlemelerinin bozuk olduğu anlamına gelmiyor.
@@ -108,7 +108,7 @@ Mevcut PR'larla çakışmayı kontrol etmek gerekli. Özellikle [#2793 ESL/Form 
 
 **GitHub çalışma düzeni ve lisans**
 
-6 Eylül devir hedefi [fallenhak/skymptrtest](https://github.com/fallenhak/skymptrtest); mevcut bilgi ve lab betiklerinin private deposu. Kaynak sabitlemeleri `sources.lock.json` içindedir ve araştırma checkout'ları betikle yeniden hazırlanır. Bu depo henüz upstream geçmişini içeren bir SkyMP kod fork'u değildir. Native geliştirmeye geçerken kendi kaynak fork'unuz `origin`, orijinal depo `upstream` olacak şekilde tam geçmişi korumak mantıklı. İkiniz aynı kaynak fork'unda collaborator olarak, her sorun için ayrı `codex/...` dalında çalışabilirsiniz. Çalışan taban commit'i ve test sürümü sabitlenmeli; upstream güncellemeleri kontrollü alınmalı. Bağımsız düzeltmeler PR üzerinden birleştirilirse başka sunuculara veya upstream'e taşımak kolaylaşır.
+Ortak kaynak deposu [fallenhak/skymptrtest](https://github.com/fallenhak/skymptrtest), `origin` olarak kullanılır; orijinal kaynak `upstream` olur. SkyMP kaynak ağacı ve 2.358 upstream commit'i bu projeye alındı. Kaynak/native çıktı sabitlemeleri `sources.lock.json` içindedir. İkiniz ayrı `codex/...` dalları veya worktree'lerde çalışabilirsiniz. PR'larda istemci derlemesi ve manifest testleri çalışır; upstream güncellemeleri ayrı dallarda doğrulanır. [Ekip düzeni](TEAM_WORKFLOW_TR.md).
 
 Kaynak kod, testler ve örnek ayarlar sürümlenir. Bethesda oyun arşivleri, kişisel kayıtlar, yerel dünya verisi, makineye özgü ayarlar ve erişim anahtarları geliştirme deposuna konulmaz. Fork'un CI'ı yerel/erişilebilir test verisiyle ve gereken işler seçilerek düzenlenmeli; upstream'in dağıtım workflow'ları özel repo ve secret varsayımları içeriyor.
 
@@ -118,4 +118,4 @@ Kaynak kod, testler ve örnek ayarlar sürümlenir. Bethesda oyun arşivleri, ki
 
 Resmi çıktıyla sunucu başlangıcı doğrulandı. Sıradaki altyapı hedefi iki oyuncunun aynı dünyaya bağlandığını, hareket/envanter durumunu birlikte gördüğünü ve yeniden girişte karakter durumunun korunduğunu göstermek. Kaynak geliştirmesi için VS 2022 araç zinciri ve test tabanı da hazırlanmalı. Ardından oyunun kendi menüsünden alınan tek bir demircilik perkini sunucuda doğrulayan, tarif erişimine etki eden ve yeniden girişte koruyan uçtan uca deney yapılacak. Yeni meslekler için sonraki küçük deney madencilik ağacı. Ayrıntılı kabul koşulları `PERK_SYSTEM_PLAN_TR.md` belgesinde.
 
-Bir sonraki kurulum adımında açık kalanlar: mevcut `1.7.104` kurulumu için istemci paketinin doğrulanması; arkadaşın runtime/mod sürümleri; giriş/test UI dosyaları; native kaynak fork'unun bu devir deposuyla çalışma düzeni. Devir reposunun adı ve sahibi artık belli: `fallenhak/skymptrtest`. Perk menüsü için tercih oyunun kendi menüsü. Çekirdek incelemesi için özel RP sunucularına kaynak erişimi gerekmiyor. Güncel devam adımları [HANDOFF_TR.md](HANDOFF_TR.md) belgesindedir.
+Bir sonraki kurulum adımında açık kalanlar: mevcut `1.7.104` için SKSE/Address Library ve UI dosyalarıyla oyun içi istemci doğrulaması; arkadaşın runtime/mod sürümleri. Ortak kaynak ve dal düzeni kuruldu. Perk menüsü için tercih oyunun kendi menüsü. Çekirdek incelemesi için özel RP sunucularına kaynak erişimi gerekmiyor. Güncel devam adımları [HANDOFF_TR.md](HANDOFF_TR.md) belgesindedir.

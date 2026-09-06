@@ -1,17 +1,18 @@
 # SkyMP TR Test
 
-SkyMP üzerinde iki kişilik yerel geliştirme ve RP perk/meslek sistemi denemeleri için araştırma, kurulum betikleri ve devir deposu.
+SkyMP üzerinde ortak geliştirme, iki kişilik yerel testler ve RP perk/meslek sistemi denemeleri için kaynak deposu. SkyMP'nin C++/TypeScript kodu ve upstream Git geçmişi bu repoda bulunur.
 
-**Durum — 6 Eylül 2026:** Resmi sunucu çıktısı yerelde açılıyor; başlangıç ve oyun verisi manifest testi geçti. İki oyun istemcisinin bağlandığı, karakterlerin kalıcı olduğu veya perklerin çalıştığı henüz doğrulanmadı. İlk öncelik oynanabilir altyapı; ardından Skyrim'in kendi perk menüsünü koruyarak sunucu kontrollü ilerleme.
+**Durum — 6 Eylül 2026:** Sunucu başlangıç testi, kaynak koddan istemci derlemesi ve 14 manifest testi geçti. İstemci mod listesini doğrudan yerel sunucudan alabiliyor. İlk oyuncu paketi ayrı klasörde hazırlandı; SKSE, güncel Address Library ve giriş/UI dosyaları için oyun kurulumu henüz tamamlanmadı. İki oyun istemcisi, karakter kalıcılığı ve perk etkileri hâlâ doğrulanacak.
 
 ## Buradan devam edin
 
-1. [Devir belgesi](docs/HANDOFF_TR.md): kullanıcı hedefleri, tamamlanan işler, açık noktalar ve bir sonraki görev.
-2. [Yerel kurulum](docs/LOCAL_SERVER_TR.md): hazırlama, başlatma ve doğrulama komutları.
-3. [Perk ve meslek planı](docs/PERK_SYSTEM_PLAN_TR.md): native menü, kalıcılık, RP dengesi ve yeni ağaçlar.
-4. [Teknik bağlam](docs/SKYMP_CONTEXT_TR.md) ve [kaynak kod haritası](docs/SOURCE_MAP_TR.md): mimari, sürümler, ilgili kod ve sonraki senkronizasyon adayları.
+1. [Ortak çalışma düzeni](docs/TEAM_WORKFLOW_TR.md): klonlama, dal/worktree, PR ve test akışı.
+2. [Güncel proje durumu](docs/HANDOFF_TR.md): hedefler, tamamlanan işler, açık noktalar ve sıradaki görev.
+3. [Yerel kurulum](docs/LOCAL_SERVER_TR.md): hazırlama, başlatma ve doğrulama komutları.
+4. [Perk ve meslek planı](docs/PERK_SYSTEM_PLAN_TR.md): native menü, kalıcılık, RP dengesi ve yeni ağaçlar.
+5. [Teknik bağlam](docs/SKYMP_CONTEXT_TR.md) ve [kaynak kod haritası](docs/SOURCE_MAP_TR.md): mimari, sürümler ve ilgili kod.
 
-Bir modelle devam ediyorsanız önce [AGENTS.md](AGENTS.md) ve devir belgesini okutun. Önceki konuşmaya erişim gerekmez.
+Projeye katılan kişi/model önce [AGENTS.md](AGENTS.md) ve güncel durum belgesini okuyabilir. Geliştirme aynı repoda devam eder; önceki konuşmaya erişim gerekmez.
 
 ## Depoyu ve kaynakları hazırlama
 
@@ -20,10 +21,11 @@ GitHub hesabınızın bu private repoya erişimi olmalı. Windows PowerShell'de:
 ```powershell
 gh repo clone fallenhak/skymptrtest
 Set-Location skymptrtest
-.\scripts\restore-sources.ps1
+.\scripts\build-client.ps1
+node --test skymp5-client/tests/settingsService.test.cjs
 ```
 
-Bu depo şu ana kadarki bize ait betikleri ve bilgi birikimini sürümler. SkyMP ve Custom Skills Framework kaynakları [sources.lock.json](sources.lock.json) içindeki **tam commit kimliklerinden** `.research` altına indirilir. Kaynaklar değiştirilmedi; bu depo henüz upstream geçmişini içeren bir SkyMP kod fork'u değil. Kaynak indirme betiği derleme veya mod kurulumu yapmaz.
+SkyMP kaynakları doğrudan repo kökündedir; 2.358 upstream commit'i korunmuştur. [sources.lock.json](sources.lock.json) içindeki SkyMP commit'i içeri aktarılan tabandır; geliştirme commit'leri bunun üzerine gelir. CSF araştırma kopyası gerektiğinde `restore-sources.ps1` ile hazırlanır. C++ derleme gereksinimleri upstream [CONTRIBUTING.md](CONTRIBUTING.md) içindedir; TypeScript derlemesi bunları gerektirmez.
 
 ## Sunucuyu deneme
 
@@ -36,6 +38,15 @@ node .\scripts\test-local-server.mjs
 ```
 
 Oyun yolunu kendi kurulumunuza göre değiştirin. Hazırlama betiği mevcut sunucu/dünya klasörünün üzerine yazmaz. Test kendi başlattığı sunucuyu kapatır; sürekli çalıştırmak için son komutu kullanın. İstemci kurulumu bu adımların parçası değil.
+
+Derlenen istemciyle ayrı bir test paketi hazırlamak ve eksikleri görmek için:
+
+```powershell
+.\scripts\prepare-local-client.ps1 -ProfileId 1
+.\scripts\check-client-prerequisites.ps1 -SkyrimDirectory 'C:\Games\steamapps\common\Skyrim Special Edition'
+```
+
+Paket `.local/skymp-756fb86/clients/player-1` altına yazılır; oyun klasörünü değiştirmez. `server-http-url`, yerel manifest adresini belirtir. İkinci oyuncu ve ağ ayarları ortak çalışma belgesindedir.
 
 Betikler temiz bir çalışma klasöründe, aynı Windows bilgisayarında doğrulandı. Sonuç ve test sınırları [test kaydında](docs/evidence/2026-09-06-handoff-verification.json). Başka bilgisayarda deneme henüz yapılmadı.
 
