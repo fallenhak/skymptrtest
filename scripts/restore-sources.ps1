@@ -5,6 +5,14 @@ $gitCommand = Get-Command git.exe -ErrorAction Stop
 
 foreach ($source in @($sourceLock.skymp, $sourceLock.customSkills)) {
     $checkout = Join-Path $projectRoot $source.localCheckout
+    if ($source.localCheckout -eq '.') {
+        & $gitCommand.Source -C $checkout merge-base --is-ancestor $source.commit HEAD
+        if ($LASTEXITCODE -ne 0) {
+            throw 'The tracked source history does not contain the pinned upstream baseline. Fetch full history if this is a shallow clone.'
+        }
+        Write-Output "Tracked source includes upstream baseline: $($source.repository) $($source.commit)"
+        continue
+    }
     if (Test-Path -LiteralPath $checkout) {
         if (-not (Test-Path -LiteralPath (Join-Path $checkout '.git'))) {
             throw "Existing directory is not a source checkout: $checkout"

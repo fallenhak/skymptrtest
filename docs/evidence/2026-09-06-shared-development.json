@@ -1,0 +1,20 @@
+{
+  "verifiedOn": "2026-09-06",
+  "upstreamBaseline": "756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3",
+  "upstreamCommitCount": 2358,
+  "nodeVersion": "v24.11.1",
+  "yarnVersion": "1.22.22",
+  "clientBuild": "passed: webpack 5.94.0 with TypeScript checking",
+  "manifestRegressionTests": { "passed": 14, "failed": 0 },
+  "clientScriptSha256": "D3D70578A1D804438E5FC1FC04487F3D946DAA56F774A3FE46E93300E7A88AD7",
+  "player1Package": "staged under ignored .local directory",
+  "gameVersion": "1.7.104.0",
+  "gameFilesModified": false,
+  "missingClientFilesAtCheck": [
+    "skse64_loader.exe",
+    "skse64_1_7_104.dll",
+    "Data/SKSE/Plugins/versionlib-1-7-104-0.bin",
+    "Data/Platform/UI/index.html"
+  ],
+  "notVerified": ["Native C++ build", "Native plugin compatibility", "Two-player gameplay", "Character persistence", "Perk effects"]
+}

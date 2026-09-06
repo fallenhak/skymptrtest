@@ -4,7 +4,7 @@
 
 ## SkyMP
 
-Yerel taban: `.research/upstream-skymp`. Dosya yolları bu checkout'a göredir.
+Yerel geliştirme tabanı artık repo köküdür. Aşağıdaki GitHub bağlantıları incelenen upstream commit'ini gösterir; bizim değişikliklerimiz kökteki dosyalarda bulunur. Örneğin `settingsService.ts` dosyasına yerel manifest yolu ve hata kontrolü eklenmiştir.
 
 | Konu | Kaynak | Neden bakılmalı? |
 | --- | --- | --- |
