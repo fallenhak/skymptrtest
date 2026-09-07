@@ -96,9 +96,17 @@ if (Test-Path -LiteralPath $dtIni) {
     [IO.File]::WriteAllText($dtIni, $c, [Text.UTF8Encoding]::new($false))
 }
 
+# Installed version bilgisini de paket icine ekle
+$modpackVer = Join-Path $projectRoot "$($lock.serverArtifact.runtimeDirectory)/data/modpack-version.json"
+if (Test-Path -LiteralPath $modpackVer) {
+    Copy-Item -LiteralPath $modpackVer -Destination (Join-Path $stagingData 'installed-version.json') -Force
+}
+
 Write-Output "3. SkyMPTR-Data.zip arsivi olusturuluyor..."
+Add-Type -AssemblyName System.IO.Compression.FileSystem
 $dataZip = Join-Path $buildDir 'SkyMPTR-Data.zip'
-Compress-Archive -Path "$stagingData\*" -DestinationPath $dataZip -CompressionLevel Optimal
+if (Test-Path -LiteralPath $dataZip) { Remove-Item -LiteralPath $dataZip -Force }
+[System.IO.Compression.ZipFile]::CreateFromDirectory($stagingData, $dataZip, [System.IO.Compression.CompressionLevel]::Fastest, $false)
 Remove-Item -LiteralPath $stagingData -Recurse -Force
 
 # Beni Oku dosyasi
@@ -115,15 +123,20 @@ Ozellikler:
 - Eger Steam'deki Skyrim surumunuz farkliysa (1.6.1179 vb.), otomatik
   olarak 1.6.1170 surumune dusurur (downgrade).
 - SKSE, Engine Fixes, Display Tweaks ve SkyMP modlarini tek tikla yukler.
+- Otomatik Oyuncu Kimligi: Profil ID'niz otomatik uretilir ve kalici saklanir.
+- Otomatik Mod Guncelleyici: Sunucu sahibi mod eklediginde baslatici yeni
+  surumu aninda gorur ve tek tikla modlarinizi sunucuyla esitler.
 
 Nasil Kullanilir?
 1. Bu zip paketini bilgisayarinizda herhangi bir yere cikarin (orn: Masaustu).
 2. 'SkyMPTR-Launcher.exe' uygulamasina cift tiklayin.
 3. Baslatici Steam oyununuzu otomatik bulacaktir (bulamazsa Gozat ile secin).
-4. Sunucu IP adresini (Radmin VPN IP) kontrol edip 'KURULUMU YAP VE OYNA'
-   butonuna basin.
-5. Kurulum tamamlandiginda 'OYUNA BASLA' butonuna basarak dogrudan sunucuya
+4. Sunucu IP adresini (Radmin VPN IP) girin.
+5. 'KURULUMU YAP VE OYNA' butonuna basin.
+6. Kurulum tamamlandiginda 'OYUNA BASLA' butonuna basarak dogrudan sunucuya
    baglanin!
+7. Sunucuda yeni modlar eklendiginde baslatici 'GUNCELLEMEYI INDIR' uyarisi
+   verecektir. Guncellemeyi yaparak oyuna devam edebilirsiniz.
 "@
 [IO.File]::WriteAllText((Join-Path $buildDir 'BENI_OKU.txt'), $readme, [Text.Encoding]::GetEncoding(1254))
 
@@ -133,7 +146,7 @@ $finalDir = Split-Path -Parent $finalZip
 if (-not (Test-Path -LiteralPath $finalDir)) { New-Item -ItemType Directory -Path $finalDir -Force | Out-Null }
 if (Test-Path -LiteralPath $finalZip) { Remove-Item -LiteralPath $finalZip -Force }
 
-Compress-Archive -Path "$buildDir\*" -DestinationPath $finalZip -CompressionLevel Optimal
+[System.IO.Compression.ZipFile]::CreateFromDirectory($buildDir, $finalZip, [System.IO.Compression.CompressionLevel]::Fastest, $false)
 Remove-Item -LiteralPath $buildDir -Recurse -Force
 
 $mb = [math]::Round(((Get-Item -LiteralPath $finalZip).Length / 1MB), 2)

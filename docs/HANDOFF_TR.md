@@ -169,6 +169,28 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
 - **Paketleme Otomasyonu (`scripts/build-launcher.ps1`):**
   - `dist/SkyMPTR-StockGame-Installer.zip` arşivini üretir. Arşiv içerisinde `SkyMPTR-Launcher.exe`, `SkyMPTR-Data.zip` ve `BENI_OKU.txt` hazır yer alır.
 
+## 14. Otomatik Mod Dağıtımı, Zorunlu Güncelleme ve Kalıcı Oyuncu Kimliği — 7 Eylül
+
+- **Karakter ve Dünya Sıfırlaması:**
+  - Sunucu dünya dizinindeki `.local/skymp-756fb86/server/world/changeForms/0.json` silinerek host'un önceki test karakteri ve tüm dünya değişiklikleri temizlendi. Sunucu yeni oyuncuları doğrudan RaceMenu karakter oluşturma ekranıyla karşılar.
+- **Otomatik Sunucu Mod Paketi Eşitleme (`scripts/sync-server-modpack.ps1`):**
+  - Sunucu sahibi MO2 (`mod-organizer/mods/`) üzerinde mod eklediğinde, çıkardığında veya değiştirdiğinde, betik aktif modları tarar.
+  - Mod dosyalarını `.NET ZipFile` ile hızlıca `server/data/modpack.zip` olarak paketler.
+  - Dosya hash'inde değişiklik varsa sürüm numarasını otomatik 1 artırarak `server/data/modpack-version.json` dosyasını günceller. Değişiklik yoksa sürümü korur.
+  - `scripts/start-local-server.ps1` içine entegre edildi; sunucu her başlatıldığında modlar otomatik taranır ve sunulur.
+- **Kalıcı ve Otomatik Oyuncu Kimliği (Player ID):**
+  - Kullanıcıların elle sayısal `profileId` yazma zorunluluğu kaldırıldı.
+  - Başlatıcı, hedef klasörde `player-identity.json` oluşturur.
+  - Sunucu adresi `127.0.0.1` / `localhost` olduğunda otomatik olarak `#1 (Sunucu Sahibi)` atanır.
+  - Uzak sunucuya bağlanan oyunculara ise çakışma riskini önleyen rastgele kalıcı 5 haneli bir kimlik (`#10000..99999`) atanır.
+  - Oyuncu sıfırdan yeni bir karaktere başlamak isterse arayüzdeki `[Yeni ID Al]` butonuna basarak tek tıkla yeni bir kimlik edinebilir.
+- **Başlatıcı Zorunlu Güncelleme Sistemi (Force-Update):**
+  - Başlatıcı açıldığında veya sunucu IP'si girildiğinde arkaplanda `http://<server-ip>:3000/modpack-version.json` adresini sorgular.
+  - Yerel `installed-version.json` ile sunucu sürümünü ve SHA-256 hash'ini karşılaştırır.
+  - Eğer sunucuda yeni bir mod paketi varsa, oyunu başlatma butonu devre dışı kalır ve `GÜNCELLEMEYİ İNDİR (vX)` butonuna dönüşür.
+  - Kullanıcı butona bastığında `modpack.zip`'i canlı ilerleme çubuğuyla indirir, doğrudan Stock Game `Data\` klasörüne açar ve yerel sürümü günceller.
+  - Güncelleme tamamlanmadan hiç kimse eski modlarla sunucuya giriş yapamaz. Güncelleme bitince buton `OYUNA BAŞLA` olarak yeşile döner.
+
 
 
 
