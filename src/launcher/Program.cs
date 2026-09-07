@@ -369,6 +369,10 @@ public class LauncherWindow {
     }
 
     private void EnsurePlayerIdentity() {
+        if (!window.Dispatcher.CheckAccess()) {
+            window.Dispatcher.Invoke(new Action(EnsurePlayerIdentity));
+            return;
+        }
         string dest = txtDestPath.Text.Trim();
         string identityFile = Path.Combine(dest, "player-identity.json");
         string serverIp = txtServerIp.Text.Trim();
@@ -420,6 +424,10 @@ public class LauncherWindow {
     }
 
     private void UpdateIdentityDisplay() {
+        if (!window.Dispatcher.CheckAccess()) {
+            window.Dispatcher.Invoke(new Action(UpdateIdentityDisplay));
+            return;
+        }
         string serverIp = txtServerIp.Text.Trim();
         bool isHost = serverIp == "127.0.0.1" || serverIp.Equals("localhost", StringComparison.OrdinalIgnoreCase);
 
@@ -450,6 +458,10 @@ public class LauncherWindow {
     }
 
     private async void CheckInstallStatus() {
+        if (!window.Dispatcher.CheckAccess()) {
+            window.Dispatcher.Invoke(new Action(CheckInstallStatus));
+            return;
+        }
         string dest = txtDestPath.Text.Trim();
         string loader = Path.Combine(dest, "skse64_loader.exe");
         string platform = Path.Combine(dest, @"Data\SKSE\Plugins\SkyrimPlatform.dll");
@@ -595,14 +607,18 @@ public class LauncherWindow {
         btnResetProfile.IsEnabled = false;
         btnCheckServer.IsEnabled = false;
 
+        EnsurePlayerIdentity();
+
         try {
             await Task.Run(() => PerformInstallation(source, dest, serverIp));
             CheckInstallStatus();
             MessageBox.Show("SkyMP TR kurulumu basariyla tamamlandi!\n'OYUNA BASLA' butonuna basarak sunucuya baglanabilirsiniz.", "Kurulum Basarili", MessageBoxButton.OK, MessageBoxImage.Information);
         } catch (Exception ex) {
             MessageBox.Show("Kurulum sirasinda bir hata olustu:\n" + ex.Message, "Kurulum Hatasi", MessageBoxButton.OK, MessageBoxImage.Error);
-            lblStatusText.Text = "Hata: " + ex.Message;
-            lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
+            window.Dispatcher.Invoke(new Action(() => {
+                lblStatusText.Text = "Hata: " + ex.Message;
+                lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
+            }));
         } finally {
             isInstalling = false;
             btnMainAction.IsEnabled = true;
@@ -676,7 +692,6 @@ public class LauncherWindow {
 
         // 4. Ayarlarin Yapilandirilmasi
         UpdateProgress(90, "Sunucu ve ekran ayarlari yapilandiriliyor...");
-        EnsurePlayerIdentity();
         ConfigureClientSettings(dest, serverIp);
         ConfigureDisplayTweaks(dest);
 
