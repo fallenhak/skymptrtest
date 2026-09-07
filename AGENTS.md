@@ -12,14 +12,18 @@ Run from this repository root in Windows PowerShell:
 
 - `.\scripts\restore-sources.ps1` checks tracked upstream ancestry and restores the CSF research checkout without building it.
 - `.\scripts\build-client.ps1` installs dependencies from the Yarn lockfile and compiles the client without deploying into Skyrim.
+- `.\scripts\build-front.ps1` builds the tracked widget UI into `build/dist/client/Data/Platform/UI` without deploying into Skyrim.
 - `node --test skymp5-client/tests/settingsService.test.cjs` runs manifest routing/failure tests without Skyrim.
 - `.\scripts\prepare-local-server.ps1 -SkyrimDirectory 'C:\Games\steamapps\common\Skyrim Special Edition'` prepares a fresh runtime using the caller's game installation. Requires GitHub CLI authentication and Node; change the game path as needed.
 - `node .\scripts\test-local-server.mjs` starts the server, checks native readiness and the five-master manifest, then stops its own process.
 - `.\scripts\start-local-server.ps1` runs the server until stopped.
 - `.\scripts\prepare-local-client.ps1 -ProfileId 1` stages native files and the locally built client with offline settings.
 - `.\scripts\check-client-prerequisites.ps1 -SkyrimDirectory 'C:\Games\steamapps\common\Skyrim Special Edition'` reports missing files; exit 2 means requirements remain.
+- Follow `docs/GAME_LAB_TR.md` for the pinned Skyrim 1.6.1170 lab. `.\scripts\test-game-profile.ps1` verifies actual MO2 settings/save isolation; `.\scripts\start-game-lab.ps1` launches SKSE through that profile.
 
 Do not run the smoke test alongside another server using the same ports. Preserve existing profiles and world data. Client compilation installs client dependencies; the server smoke test uses Node built-ins.
+
+Do not use `Start-Process -Wait` to launch MO2: its job conflicts with MO2 child process breakaway. Use `-PassThru` and the process object's `WaitForExit()` instead. Keep the server and client on the same five master files; this machine's Steam 1.7 data differs from the 1.6.1170 lab.
 
 ## Evidence and Scope
 

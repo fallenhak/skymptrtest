@@ -25,6 +25,28 @@
     "cacheDirectory": ".research/artifacts/756fb86/dist",
     "profilesDirectory": ".local/skymp-756fb86/clients"
   },
+  "gameLab": {
+    "directory": ".local/skymp-756fb86/skyrim-1.6.1170",
+    "gameVersion": "1.6.1170.0",
+    "skse": {
+      "version": "2.2.8",
+      "url": "https://www.nexusmods.com/skyrimspecialedition/mods/30379?tab=files",
+      "archiveRoot": "skse64_2_02_08",
+      "archiveName": "Skyrim Script Extender (SKSE64) Steam 30379 2.2.8 2026-08-20T08-07Z s6Og0dF9H.7z",
+      "sha256": "ADA6A771E18245CD0A6106B7E019B3B2BDF7A6BEE390BC069C6E0A35F89544FA",
+      "provenance": "Existing local download; embedded readme targets Steam 1.6.1170, installed loader has valid Ian Patterson signature"
+    },
+    "addressLibrary": {
+      "version": "13",
+      "url": "https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files&file_id=795954",
+      "sha256": "BE0C7C07FB63FD1C1403690D4797C7A8FDF8799118ACCEB605F285D7B0EE055F"
+    },
+    "modOrganizer": {
+      "version": "2.5.2",
+      "url": "https://github.com/ModOrganizer2/modorganizer/releases/download/v2.5.2/Mod.Organizer-2.5.2.7z",
+      "sha256": "E6376EFD87FD5DDD95AEE959405E8F067AFA526EA6C2C0C5AA03C5108BF4A815"
+    }
+  },
   "serverArtifact": {
     "runId": "33943379757",
     "runUrl": "https://github.com/skyrim-multiplayer/skymp/actions/runs/33943379757",

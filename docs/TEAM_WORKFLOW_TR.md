@@ -36,7 +36,7 @@ Worktree'lerin `.local` ve `node_modules` klasörleri ayrıdır. Aynı makinede 
 
 ## Kontroller
 
-`.github/workflows/lab-checks.yml`, istemciyi sabit Yarn lockfile ile derler ve manifest testlerini çalıştırır. Bu kontrol Skyrim kurulumu veya özel sunucu secret'ı istemez. C++ derlemesini, oyun içi bağlantıyı veya perk etkilerini doğrulamaz.
+`.github/workflows/lab-checks.yml`, istemciyi ve repodaki oyun arayüzünü sabit Yarn lockfile ile derler, manifest testlerini çalıştırır ve lab betiklerini sözdizimi açısından kontrol eder. Bu kontrol Skyrim kurulumu veya özel sunucu secret'ı istemez. C++ derlemesini, oyun içi bağlantıyı veya perk etkilerini doğrulamaz.
 
 Upstream'in periyodik build/deploy workflow'ları `.github/upstream-workflows` altında korunur ve otomatik çalışmaz. Native build işlerini kendi gereksinimlerimize göre ayrıca etkinleştireceğiz. `sources.lock.json` içindeki native çıktı ile kaynak değişikliklerini eşleştirin; istemci JS'si değiştiğinde iki oyuncu da aynı derlemeyi kullanmalı.
 
@@ -53,4 +53,4 @@ Mevcut sunucu/profil varsa hazırlama betikleri üzerine yazmaz. `start-local-se
 
 İstemci ayarındaki `server-http-url` manifestin doğrudan sunucudan alınmasını sağlar. Sunucunun HTTP servisi başlangıçta `127.0.0.1` dinler; arkadaş bağlantısı öncesinde `uiListenHost` ve ağ erişimi test ağı için düzenlenmeli. Offline giriş profil kimliğine dayandığı için herkese açık yayın amacıyla kullanılmamalı.
 
-Ortak karar ve ilerleme için [HANDOFF_TR.md](HANDOFF_TR.md), perk tasarımı için [PERK_SYSTEM_PLAN_TR.md](PERK_SYSTEM_PLAN_TR.md) güncel tutulur. Tamamlanmamış oyun içi testler CI geçmesiyle tamamlanmış sayılmaz.
+Ayrı 1.6.1170 oyunu, MO2 profili ve gerçek profil yönlendirme testi için [GAME_LAB_TR.md](GAME_LAB_TR.md) adımlarını kullanın. Ortak karar ve ilerleme için [HANDOFF_TR.md](HANDOFF_TR.md), perk tasarımı için [PERK_SYSTEM_PLAN_TR.md](PERK_SYSTEM_PLAN_TR.md) güncel tutulur. Tamamlanmamış oyun içi testler CI geçmesiyle tamamlanmış sayılmaz.

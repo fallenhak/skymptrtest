@@ -40,3 +40,4 @@ if (Test-Path -LiteralPath $clientRoot) {
 }
 Write-Output $json
 if ($missing.Count -gt 0) { exit 2 }
+exit 0

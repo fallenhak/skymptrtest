@@ -1,12 +1,13 @@
 # SkyMP TR — ortak proje durumu
 
-Son güncelleme: **6 Eylül 2026**. Geliştirme bu projede devam ediyor; bu belge birden fazla kişi/modelin aynı bağlamla çalışmasını sağlar. Araştırma ve ilk sunucu testi üzerine artık tam kaynak fork'u, istemci derlemesi, manifest düzeltmesi ve ortak test düzeni kuruldu. [Ekip akışı](TEAM_WORKFLOW_TR.md).
+Son güncelleme: **7 Eylül 2026**. Geliştirme bu projede devam ediyor; bu belge birden fazla kişi/modelin aynı bağlamla çalışmasını sağlar. Tam kaynak fork'u ve ilk istemci düzeltmesi [PR #1](https://github.com/fallenhak/skymptrtest/pull/1) ile ana dala alındı; [CI geçti](https://github.com/fallenhak/skymptrtest/actions/runs/34056615032). [Ekip akışı](TEAM_WORKFLOW_TR.md).
 
 ## 1. Kullanıcının istediği çalışma
 
 - İki arkadaş SkyMP'yi yerelde çalıştırıp açık kaynak üzerinde geliştirme yapmak istiyor. Ortak kaynak deposu **fallenhak/skymptrtest**; private görünürlük korunuyor. Belgeler geliştirmeye katılmayı kolaylaştırıyor; çalışma sürüyor.
 - Kullanıcı Faalgrin'de oynuyor; fikir Keizaal deneyiminden de doğmuş. Bu sunucuların özel kaynaklarına erişim yok. Hedef onların paketlerini kopyalamak veya var olan sunucularını değiştirmek değil; açık SkyMP'de eksik/sorunlu davranışları deneyip geliştirmek.
-- Kullanıcı bu sunucuların güncel oyun sürümünde çalıştığını bildirdi. Eski README'nin sürüm listesi uyumsuzluk kanıtı değildir; downgrade kararı alınmadı.
+- Kullanıcı 7 Eylül'de önceki sürüm bilgisini düzeltti: **Faalgrin 1.6.1170 kullanıyor**. Launcher güncel Steam kurulumundan ayrı oyun/mod kurulumu hazırlıyor; kullanıcı Nexus hesabı sorulmadığını bildirdi. Yerelde `Faalgrin/Modlist/Stock Game/SkyrimSE.exe` sürümü **1.6.1170.0** olarak doğrulandı. MO2 ve Wabbajack derleme ayarları mevcut; launcher'ın tüm indirme yöntemi henüz incelenmedi. Keizaal'ın runtime'ı ayrıca doğrulanmadı.
+- İlk oynanabilir altyapı 1.6.1170 üzerinden denenecek; 1.7 kaynak yaması bekletildi. Kullanıcı teknik olmayan kurulum/oyun ekranı adımlarında yardımcı olmak istiyor; kısa yönlendirmeler isteyin, gereksiz araç çağrıları ve uzun otomasyonlarla kullanım limitini harcamayın.
 - Sıra: **oynanabilir yerel altyapı → gerçekten çalışan perkler → RP'ye uygun denge ve meslekler**. Önceki bash/kilit adayları bekleme listesine alındı.
 - Skyrim'in mevcut perkleri ve kendi yıldız ağacı menüsü mümkün olduğunca korunmalı. Özel ilerleme sistemi gerekse bile tercih ayrı bir browser perk ekranı yerine oyunun menüsünü düzenlemek.
 - Simyacılık ve demircilik yeniden dengelenecek; madencilik, terzilik ve aşçılık gibi meslek ağaçları eklenecek. Sayısal denge, puan bütçesi ve uzmanlaşma kuralları henüz belirlenmedi.
@@ -25,12 +26,16 @@ Custom Skills Framework kullanımı, ilk demircilik deneyi ve üç perkli madenc
 | TypeScript istemci | Kaynaktan webpack derlemesi ve 14 manifest regresyon testi geçti |
 | Yerel manifest düzeltmesi | `server-http-url` doğrudan sunucu erişimi sağlar; hatalı/ulaşılamayan manifest artık boş mod listesi gibi kabul edilmez |
 | İstemci paketi | Resmi native çıktılar ve yerel JS derlemesi player-1 klasöründe hazır; oyun dosyaları değiştirilmedi |
-| Oyun ön koşulları | 1.7.104 için SKSE loader/runtime, Address Library dosyası ve `Data/Platform/UI/index.html` eksik bulundu |
+| Oyun ön koşulları | SKSE/Address Library indirildi; repodaki widget UI derlendi. İlk 1.7 lab'ında dosya kontrolü ve gerçek MO2 ayar/kayıt yönlendirme testi geçti |
+| İlk native deneme | SKSE 2.3.1, 1.7.104 EXE'yi tanıdı; SkyrimPlatformImpl yüklenirken Address Library açma hatası görüldü. Nedeni ve bekletilen yama [native notunda](NATIVE_COMPATIBILITY_TR.md) |
+| Yeni çalışma tabanı | Faalgrin Stock Game 1.6.1170 ve SKSE 2.2.8 doğrulandı; temel dosyalarla ayrı test kopyası hazır. Dosya ön koşulları ve gerçek MO2 profil testi geçti; oyun içi bağlantı bekliyor |
 | İki oyunculu oyun | Bağlantı, hareket, envanter, hücre geçişi ve yeniden giriş testi yapılmadı |
 | Native derleme | C++ derlemesi, birim testleri ve CTest henüz çalıştırılmadı |
 | Perk sistemi | İnceleme/tasarım aşamasında; CSF kurulmadı, native menü veya sunucu perk protokolü uygulanmadı |
 
-Sunucunun başlaması tam oynanabilir altyapı anlamına gelmez. Mevcut gamemode yalnızca hazır olma işareti üretir; RP ekonomisi, karakter ekranı veya meslek içeriği sağlamaz. Test sonunda başlatılan süreç kapatıldı; sürekli çalışan bir hizmet kurulmadı.
+Sunucunun başlaması tam oynanabilir altyapı anlamına gelmez. Mevcut gamemode yalnızca hazır olma işareti üretir; RP ekonomisi, karakter ekranı veya meslek içeriği sağlamaz. Başlangıç smoke testi kendi sürecini kapatır; sürekli çalışan bir hizmet kurulmadı. Elle oyun denemesi için sunucu ayrıca başlatılır; süreç kimlikleri ve günlükler yalnızca `.local` altında tutulur.
+
+1.6.1170 lab denemesinde MO2 hem Node hem SKSE için Error 5 gösterdi. Başlatma betiklerindeki `Start-Process -Wait` kaldırılıp yalnızca MO2 süreci beklendiğinde Node başlatma ve profil testi geçti. MO2 kaynak kodunun kullandığı `CREATE_BREAKAWAY_FROM_JOB` ile PowerShell bekleme grubu çakışıyordu; antivirüs ayarı değiştirilmedi. Kullanıcı MO2 kullanımına hakim ve sıradaki oyun başlatmasını elle deniyor. [Ayrıntılar](GAME_LAB_TR.md), [taşınabilir kanıt](evidence/2026-09-07-game-lab.json).
 
 Makineye özgü ham çalışma dosyaları `.local` altında kalır. Taşınabilir test sonucu [evidence/2026-09-06-handoff-verification.json](evidence/2026-09-06-handoff-verification.json) dosyasında; tekrar çalıştırma [LOCAL_SERVER_TR.md](LOCAL_SERVER_TR.md) belgesindedir.
 
@@ -59,7 +64,7 @@ Bu GitHub deposu artık SkyMP'nin tam kaynak ağacını ve upstream geçmişini 
 
 - SkyMP: `756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3`; incelenen ana dal commit'i 18 Ağustos 2026. Platform paket sürümü `2.9.0`.
 - Sunucu: [33943379757 numaralı resmi Windows CI çalışması](https://github.com/skyrim-multiplayer/skymp/actions/runs/33943379757), `server-dist`; bu çalışma aynı commit için başarılı. Gözlenen artifact son kullanım tarihi 4 Aralık 2026.
-- CSF: `8be7055f2483a261e0c377e2e8fc04b34116c68f`, proje sürümü `3.2.0`; incelenen commit release etiketiyle aynı commit olarak varsayılmamalı. CSF bir araştırma adayı.
+- CSF: `8be7055f2483a261e0c377e2e8fc04b34116c68f`, proje sürümü `3.2.0`; incelenen commit release etiketiyle aynı commit olarak varsayılmamalı. CSF bir araştırma adayı; 1.6.1170 test lab’ına kurulmadı.
 - İlk bilgisayar: Windows, PowerShell; Node `24.11.1`, npm `11.6.2`, Python `3.13`; Git ve oturumu açık GitHub CLI mevcut. Bu oturum başka bilgisayara taşınmaz.
 - Oyun: `C:\Games\steamapps\common\Skyrim Special Edition`, EXE `1.7.104.0`; beş temel ESM mevcut. Creation Club dosyaları da var; gerçek istemci load order'ı henüz incelenmedi.
 - Visual Studio Community 2026 / MSVC `14.51.36231` bulundu. Upstream CMake ise `Visual Studio 17 2022` generator'ünü açıkça şart koşuyor. Yarn PATH'te yok; CMake yalnızca VS 2026 altında bulundu. Native araç zinciri kurulmadı.
@@ -77,25 +82,25 @@ Bu ortam değerleri gözlem tarihine aittir. Başka makinede veya sonraki sürü
 
 **Offline sınırı:** `offlineMode` bütün dış istekleri kapatmaz. Yeni `server-http-url` ayarı mod manifestini doğrudan yerel HTTP sunucusundan alır; bu davranış 14 testle doğrulandı. `server-info-ignore` sunucu bilgi sorgusunu atlar. Bunlar hazırlanan istemci ayarlarına yazılır. Tam oyun içi akış hâlâ test edilmeli; load order uyuşmazlığı gizlenmez.
 
-**UI ve gamemode:** `BUILD_FRONT=ON` ayrı `skymp5-front` deposuna/PAT'e bağlı; anonim erişim 404 döndü. Bunun özel mi, kaldırılmış mı olduğu kesin değil. Güncel browser yolu `Data/Platform/UI/index.html`. Küçük yerel gamemode yazılabilir; özel RP sunucularının kaynak erişimi ön koşul değil. Giriş UI ihtiyacı ile kullanıcının native perk menüsü tercihi farklı konular.
+**UI ve gamemode:** Upstream `BUILD_FRONT=ON` yolu ayrı `skymp5-front` deposuna/PAT'e bağlı; anonim erişim 404 döndü. Biz `build-front.ps1` ile **bu repodaki** widget arayüzünü `Data/Platform/UI` için derledik. Derleme geçti; oyun içi davranış henüz doğrulanmadı. Giriş/widget arayüzü ile kullanıcının native perk menüsü tercihi farklı konular.
 
 **Perkler:** `DisableSkillAdvanceService` normal skill ilerlemesini kapatıyor. SweetPie'ye özgü menü/perk servisleri koşullu. `addPerk`, `removePerk`, `hasPerk` ve perk puanı API'leri var; `perkEntryRun` satın alma onayı olayı değil. Sunucuda tam vanilla ilerleme sistemi hazır kabul edilemez. Hasar ve üretim koşulları sunucunun kendi kodunda ele alınmalı.
 
 **Craft:** Tarif/istasyon/envanter altyapısı ve `onCraft` var. `EvaluateCraftRecipeConditions` mevcut; “hiç koşul kontrol edilmiyor” demek yanlış olur. Buna karşılık temel factory'de `HasPerk` kaydı yok ve `RecipeItemsMatch` tempering'i dışlıyor. Bir üretim tarifini açmak, demircilik perkinin tüm iyileştirme etkilerini kanıtlamaz.
 
-**CSF:** Gerçek `RE::StatsMenu` menüsünü kullanıyor; `SKILLS.json` ve uygun NIF skydome ile mevcut ve yeni ağaçlar birlikte gösterilebiliyor. Menü seçim/puan hook'ları var; hazır bir sunucu onay protokolü saptanmadı. Gerekirse SKSE adaptörü veya sınırlı CSF değişikliği gerekecek. `3.2.0` notları 1.7.99/Address Library 12 güncellemesi bildiriyor; bizim 1.7.104 + SkyMP kombinasyonumuz test edilmedi.
+**CSF:** Gerçek `RE::StatsMenu` menüsünü kullanıyor; `SKILLS.json` ve uygun NIF skydome ile mevcut ve yeni ağaçlar birlikte gösterilebiliyor. Menü seçim/puan hook'ları var; hazır bir sunucu onay protokolü saptanmadı. Gerekirse SKSE adaptörü veya sınırlı CSF değişikliği gerekecek. `3.2.0` notları 1.7.99/Address Library 12 güncellemesi bildiriyor; CSF ile SkyMP birlikteliği hiçbir lab sürümünde henüz test edilmedi.
 
 Kaynak bağlantıları ve semboller [SOURCE_MAP_TR.md](SOURCE_MAP_TR.md) ve [PERK_SYSTEM_PLAN_TR.md](PERK_SYSTEM_PLAN_TR.md) içindedir. Genel issue/PR adayları [SKYMP_CONTEXT_TR.md](SKYMP_CONTEXT_TR.md) içinde saklanmıştır; açık issue listesini yeniden üretilmiş hata listesi gibi sunmayın.
 
 ## 6. Sıradaki iş ve tamamlanma ölçütü
 
-**Devam eden görev oynanabilir altyapıdır.** İstemci paketi incelendi ve yerel derlememizle hazırlandı. Steam 1.7.104 kurulumu için SKSE 2.3.1 ve Address Library 13 resmi paketleri mevcut; Nexus indirmesi oturum açmayı gerektiriyor. Eksik native paketler ve yerel UI akışı tamamlanınca ayrı oyun test kurulumunda ilk bağlantı denenecek. Arkadaşın runtime/mod bilgisi henüz paylaşılmadı; ikinci oyuncu testi bu bilgi ve erişim gerektirir. [SKSE](https://skse.silverlock.org/), [Address Library](https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files).
+**Devam eden görev oynanabilir altyapıdır.** Hedef artık **1.6.1170**. Kullanıcının verdiği `C:\Users\kerim\Games\Faalgrin\Modlist\Stock Game` konumu bu sürümü içeriyor; mevcut indirme önbelleğinde SKSE 2.2.8 arşivi bulundu. `sources.lock.json` ve [oyun lab betikleri](GAME_LAB_TR.md) bu eşleşmeye güncellendi. Sunucu aynı lab'ın beş ESM'sini kullanmalı; Steam 1.7 verileriyle karıştırılmamalı. Önce native yükleme ve ilk bağlantı denenmeli. Kullanıcı oyun ekranını kontrol edebilir. VS 2022 kurulumu/1.7 native derlemesi şimdilik öncelik değil.
 
 | Deney | Tamamlandı sayılma koşulu | Şu an |
 | --- | --- | --- |
 | Sunucu başlangıcı | Native hazır işareti + beş ESM manifesti | Geçti |
 | İstemci kodu | TypeScript derlemesi + yerel/gateway manifest testleri | Geçti |
-| İstemci dosyaları | Ayrı oyuncu paketi ve eksik native/UI dosyalarının kontrolü | Paket hazır; oyun kurulumu bekliyor |
+| İstemci dosyaları | Ayrı oyun, SKSE/Address Library/UI ve MO2 profili | 1.6.1170 lab hazır; dosya kontrolü ve MO2 ayar/kayıt yönlendirme testi geçti |
 | İlk istemci | Bağlanma, karakter oluşturma/seçme, dünyaya girme | Bekliyor |
 | İki oyuncu | Farklı profil kimlikleri; birbirini görme ve hareket | Bekliyor |
 | Temel tutarlılık | Envanter/ekipman, sonradan katılma, hücreye dönme | Bekliyor |
@@ -114,4 +119,4 @@ Perk modeli için öneri: karakter başına XP, seviye, puan, rank ve veri sür�
 
 Repo sahibi arkadaşının GitHub erişimini kendisinin düzenleyeceğini belirtti; davet işlemi bu çalışmanın dışında. Kaynak kod, betikler ve belgeler ortak repoda izlenir. Bethesda ESM/BSA dosyaları, kişisel kayıtlar, dünya verisi, token'lar ve indirilmiş binary'ler Git'e eklenmez.
 
-SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisanslarıyla gelir; CSF kaynağı MIT. Kaynak geliştirirken mevcut lisans/telif dosyalarını koruyun. Ayrıntılı lisans bağlantıları teknik bağlam belgesindedir. Bu devir işlemi herhangi bir upstream PR'ı birleştirmedi, oyuna mod kurmadı veya mevcut RP sunucusunu değiştirmedi.
+SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisanslarıyla gelir; CSF kaynağı MIT. Kaynak geliştirirken mevcut lisans/telif dosyalarını koruyun. Ayrıntılı lisans bağlantıları teknik bağlam belgesindedir. Kendi test kopyamıza oyun bileşenleri kuruldu; Faalgrin/Steam kaynak klasörlerine yazılmadı, mevcut RP sunucuları değiştirilmedi.
