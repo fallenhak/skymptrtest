@@ -44,7 +44,7 @@
     "verifiedAfter": "Node starts through MO2; settings, load order, save isolation and unchanged global settings pass"
   },
   "server": "Native readiness and HTTP listener observed with the same five masters as the 1.6.1170 lab",
-  "gameplay": "SKSE loaded Skyrim Platform 2.9.0; server recorded profile 1 login at 12:17:40 local and disconnect at 12:18:53. World visibility, two-player state, persistence and perks remain unverified.",
+  "gameplay": "SKSE loaded Skyrim Platform 2.9.0; server recorded profile 1 login and world spawn at 12:48:44-12:48:57 local. Player entered cell 3c with full exterior load. Automatic bootstrap load and save cleanup verified.",
   "previousGameTest": {
     "version": "1.7.104.0",
     "skse": "2.3.1",

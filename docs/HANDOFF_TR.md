@@ -101,7 +101,7 @@ Kaynak bağlantıları ve semboller [SOURCE_MAP_TR.md](SOURCE_MAP_TR.md) ve [PER
 | Sunucu başlangıcı | Native hazır işareti + beş ESM manifesti | Geçti |
 | İstemci kodu | TypeScript derlemesi + yerel/gateway manifest testleri | Geçti |
 | İstemci dosyaları | Ayrı oyun, SKSE/Address Library/UI ve MO2 profili | 1.6.1170 lab hazır; dosya kontrolü ve MO2 ayar/kayıt yönlendirme testi geçti |
-| İlk istemci | Bağlanma, karakter oluşturma/seçme, dünyaya girme | Native yükleme ve profil 1 ile giriş geçti; dünyaya giriş/görünüm bekliyor |
+| İlk istemci | Bağlanma, karakter oluşturma/seçme, dünyaya girme | Geçti; profil 1 ile giriş, otomatik bootstrap yüklemesi, exterior cell 3c ve kayıt temizliği doğrulandı |
 | İki oyuncu | Farklı profil kimlikleri; birbirini görme ve hareket | Bekliyor |
 | Temel tutarlılık | Envanter/ekipman, sonradan katılma, hücreye dönme | Bekliyor |
 | Kalıcılık | Çık-gir ve sunucu restart sonrası aynı karakter durumu | Bekliyor |
