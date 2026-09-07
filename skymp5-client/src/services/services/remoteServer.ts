@@ -99,8 +99,12 @@ const unequipIronHelmet = () => {
 };
 
 export class RemoteServer extends ClientListener {
+  private raceMenuPending = false;
+
   constructor(private sp: Sp, private controller: CombinedController) {
     super();
+    this.controller.on("update", () => this.openPendingRaceMenu());
+    this.controller.emitter.on("connectionAccepted", () => { this.raceMenuPending = false; });
 
     this.controller.emitter.on("hostStartMessage", (e) => this.onHostStartMessage(e));
     this.controller.emitter.on("hostStopMessage", (e) => this.onHostStopMessage(e));
@@ -843,20 +847,19 @@ export class RemoteServer extends ClientListener {
   }
 
   private onSetRaceMenuOpenMessage(event: ConnectionMessage<SetRaceMenuOpenMessage>): void {
-    const msg = event.message;
+    this.raceMenuPending = event.message.open;
+  }
 
-    if (msg.open) {
-      // wait 0.3s cause we can see visual bugs when teleporting
-      // and showing this menu at the same time in onConnect
-      once('update', () =>
-        Utility.wait(0.3).then(() => {
-          unequipIronHelmet();
-          Game.showRaceMenu();
-        }),
-      );
-    } else {
-      // TODO: Implement closeMenu in SkyrimPlatform
+  private openPendingRaceMenu(): void {
+    if (!this.raceMenuPending) return;
+    const player = this.sp.Game.getPlayer();
+    if (!player || !player.getParentCell()) return;
+    if (this.sp.Ui.isMenuOpen('Main Menu') || this.sp.Ui.isMenuOpen('Loading Menu')) return;
+    if (!this.sp.Ui.isMenuOpen('RaceSex Menu')) {
+      unequipIronHelmet();
+      this.sp.Game.showRaceMenu();
     }
+    this.raceMenuPending = false;
   }
 
   /** Packet handlers end **/

@@ -3,57 +3,26 @@ const path = require('path');
 
 console.log("[SKYMP_LAB_READY]", JSON.stringify({ onlinePlayers: mp.get(0, "onlinePlayers") }));
 
-// -------------------------------------------------------------
-// SkyMP TR: Kalıcı ve Sunucu Onaylı Perk Sistemi (PerkSystem)
-// -------------------------------------------------------------
-
-const playersDir = path.join(process.cwd(), 'data', 'players');
-if (!fs.existsSync(playersDir)) {
-  fs.mkdirSync(playersDir, { recursive: true });
+// Chat names have their own store; PerkSystem exclusively owns data/players.
+const playersDir = path.join(process.cwd(), 'data', 'chat');
+fs.mkdirSync(playersDir, { recursive: true });
+function getProfileId(userId) {
+  const actor = mp.getUserActor(userId);
+  if (!actor) return undefined;
+  const id = mp.get(actor, 'profileId');
+  return Number.isSafeInteger(id) && id >= 0 ? id : undefined;
 }
-
 function getOrCreatePlayerData(profileId) {
-  const filePath = path.join(playersDir, `${profileId}.json`);
-  if (fs.existsSync(filePath)) {
-    try {
-      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch (e) {
-      console.error(`[PerkSystem] JSON parse hatasi (profile ${profileId}):`, e.message);
-    }
-  }
-
-  // Yeni oyuncu: 1 başlangıç perk puanı, temel zanaat seviyeleri
-  const initialData = {
-    profileId,
-    level: 1,
-    perkPoints: 1,
-    perks: [],
-    skills: {
-      Smithing: 20,
-      Alchemy: 15,
-      Enchanting: 15
-    },
-    updatedAtUtc: new Date().toISOString()
-  };
-  savePlayerData(initialData);
-  return initialData;
+  const file = path.join(playersDir, `${profileId}.json`);
+  if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
+  const legacy = path.join(process.cwd(), 'data', 'players', `${profileId}.json`);
+  const old = fs.existsSync(legacy) ? JSON.parse(fs.readFileSync(legacy, 'utf8')) : {};
+  return { profileId, rpName: old.rpName || '' };
 }
-
 function savePlayerData(data) {
-  const filePath = path.join(playersDir, `${data.profileId}.json`);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-}
-
-function sendSyncPacket(userId, data) {
-  const packet = JSON.stringify({
-    customPacketType: "syncPerks",
-    profileId: data.profileId,
-    perkPoints: data.perkPoints,
-    perks: data.perks,
-    skills: data.skills
-  });
-  mp.sendCustomPacket(userId, packet);
-  console.log(`[PerkSystem] syncPerks gönderildi -> Kullanıcı: ${userId}, Profil: #${data.profileId}, Puan: ${data.perkPoints}, Perk Sayısı: ${data.perks.length}`);
+  const file = path.join(playersDir, `${data.profileId}.json`);
+  fs.writeFileSync(file + '.tmp', JSON.stringify(data, null, 2));
+  fs.renameSync(file + '.tmp', file);
 }
 
 // -------------------------------------------------------------
@@ -111,7 +80,8 @@ function handleChatInput(userId, rawText) {
   const text = (rawText || "").trim();
   if (!text) return;
 
-  const profileId = userProfiles.get(userId) || 1;
+  const profileId = getProfileId(userId);
+  if (profileId === undefined) return;
   const playerData = getOrCreatePlayerData(profileId);
   const senderActor = typeof mp.getUserActor === "function" ? mp.getUserActor(userId) : 0;
   const charName = playerData.rpName || (senderActor && typeof mp.getActorName === "function" ? mp.getActorName(senderActor) : "") || `Oyuncu #${profileId}`;
@@ -311,11 +281,7 @@ function broadcastChatMessage(opts) {
   // Hedef alıcıları belirle (bağlı tüm kullanıcılar)
   const targets = new Set(connectedUsers);
   targets.add(senderUserId); // Göndereni kesinlikle dahil et
-  if (userProfiles) {
-    for (const uid of userProfiles.keys()) {
-      targets.add(uid);
-    }
-  }
+
 
   for (const targetUserId of targets) {
     let opacity = 1.0;
@@ -392,57 +358,13 @@ mp.on("customPacket", (userId, rawContent) => {
     return;
   }
 
-  if (content.customPacketType === "requestSyncPerks") {
-    let profileId = userProfiles.get(userId) || content.profileId || 1;
-    userProfiles.set(userId, profileId);
-    const data = getOrCreatePlayerData(profileId);
-    sendSyncPacket(userId, data);
-    return;
-  }
+  // Perk requests are handled exclusively by the TypeScript PerkSystem.
 
-  if (content.customPacketType === "requestSelectPerk") {
-    let profileId = userProfiles.get(userId) || content.profileId || 1;
-    userProfiles.set(userId, profileId);
-
-    const perkId = typeof content.perkId === "number" ? content.perkId : parseInt(content.perkId, 16);
-    if (!perkId || isNaN(perkId)) {
-      console.warn(`[PerkSystem] Geçersiz perk ID: ${content.perkId}`);
-      return;
-    }
-
-    const data = getOrCreatePlayerData(profileId);
-
-    // Puan kontrolü
-    if (data.perkPoints < 1) {
-      console.warn(`[PerkSystem] Profil #${profileId} için yetersiz perk puanı (0). Perk 0x${perkId.toString(16)} reddedildi.`);
-      mp.sendCustomPacket(userId, JSON.stringify({
-        customPacketType: "selectPerkRejected",
-        perkId,
-        reason: "Yetersiz perk puani"
-      }));
-      return;
-    }
-
-    // Zaten varsa tekrar puan düşme
-    if (data.perks.includes(perkId)) {
-      sendSyncPacket(userId, data);
-      return;
-    }
-
-    // Puan düş ve perki kaydet
-    data.perkPoints -= 1;
-    data.perks.push(perkId);
-    data.updatedAtUtc = new Date().toISOString();
-    savePlayerData(data);
-
-    console.log(`[PerkSystem] [✓] Profil #${profileId} perk açtı: 0x${perkId.toString(16)}. Kalan puan: ${data.perkPoints}`);
-    sendSyncPacket(userId, data);
-  }
 });
 
 mp.on("disconnect", (userId) => {
   connectedUsers.delete(userId);
-  userProfiles.delete(userId);
+
   console.log(`[ChatSystem] Kullanıcı ayrıldı: ${userId}`);
 });
 
@@ -490,7 +412,8 @@ voiceRelay.on('message', (msg, rinfo) => {
       if (actors && actors.length > 0) speakerActor = actors[0];
     }
     if (!speakerActor && typeof mp.getUserActor === 'function') {
-      for (const [uid, pid] of userProfiles.entries()) {
+      for (const uid of connectedUsers) {
+        const pid = getProfileId(uid);
         if (pid === profileId) {
           speakerActor = mp.getUserActor(uid);
           break;
@@ -513,7 +436,8 @@ voiceRelay.on('message', (msg, rinfo) => {
         if (actors && actors.length > 0) listenerActor = actors[0];
       }
       if (!listenerActor && typeof mp.getUserActor === 'function') {
-        for (const [uid, pid] of userProfiles.entries()) {
+        for (const uid of connectedUsers) {
+        const pid = getProfileId(uid);
           if (pid === targetProfileId) {
             listenerActor = mp.getUserActor(uid);
             break;

@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { System, Content, SystemContext, Log } from "./system";
+import { INITIAL_PERK_POINTS, INITIAL_SKILLS, PERK_POLICY_VERSION, validatePerkSelection } from '../../../shared/rp/perkRules';
 
 export interface PlayerPerkData {
   profileId: number;
@@ -61,18 +62,12 @@ export class PerkSystem implements System {
         return;
       }
 
-      const perkId = typeof content.perkId === "number" ? content.perkId : parseInt(content.perkId, 16);
-      if (!perkId || isNaN(perkId)) {
-        this.log(`[PerkSystem] Invalid perkId from user ${userId}`);
-        return;
-      }
-
+      const perkId = content.perkId;
       const playerData = this.getOrCreatePlayerData(profileId);
-
-      // Puan kontrolü
-      if (playerData.perkPoints < 1) {
-        this.log(`[PerkSystem] User ${userId} (profile ${profileId}) has insufficient perk points`);
-        this.sendRejectPacket(userId, perkId, "Yetersiz perk puanı", ctx);
+      const reason = validatePerkSelection(playerData, perkId);
+      if (reason) {
+        this.sendRejectPacket(userId, perkId, reason, ctx);
+        this.sendSyncPacket(userId, playerData, ctx);
         return;
       }
 
@@ -99,23 +94,24 @@ export class PerkSystem implements System {
     if (fs.existsSync(filePath)) {
       try {
         const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+        if (!data || data.profileId !== profileId || !Number.isInteger(data.perkPoints) || data.perkPoints < 0 ||
+            !Array.isArray(data.perks) || !data.perks.every((id: unknown) => typeof id === 'number' && Number.isInteger(id) && id > 0) ||
+            !data.skills || !Object.keys(INITIAL_SKILLS).every(skill => Number.isFinite(data.skills[skill]))) {
+          throw new Error('Invalid player data');
+        }
         return data as PlayerPerkData;
       } catch (e) {
-        this.log(`[PerkSystem] Error parsing data for profile ${profileId}, resetting...`);
+        throw new Error(`Cannot read perk data for profile ${profileId}; original file preserved: ${e}`);
       }
     }
 
-    // Yeni oyuncu için başlangıç verisi: 1 perk puanı
+    // Existing profiles are preserved; the lab preset applies to new profiles.
     const initialData: PlayerPerkData = {
       profileId,
       level: 1,
-      perkPoints: 1,
+      perkPoints: INITIAL_PERK_POINTS,
       perks: [],
-      skills: {
-        Smithing: 20,
-        Alchemy: 15,
-        Enchanting: 15
-      },
+      skills: { ...INITIAL_SKILLS },
       updatedAtUtc: new Date().toISOString()
     };
     this.savePlayerData(initialData);
@@ -124,12 +120,15 @@ export class PerkSystem implements System {
 
   private savePlayerData(data: PlayerPerkData): void {
     const filePath = path.join(this.playersDir, `${data.profileId}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+    const temporary = filePath + '.tmp';
+    fs.writeFileSync(temporary, JSON.stringify(data, null, 2), "utf8");
+    fs.renameSync(temporary, filePath);
   }
 
   private sendSyncPacket(userId: number, data: PlayerPerkData, ctx: SystemContext): void {
     const packet = JSON.stringify({
       customPacketType: "syncPerks",
+      policyVersion: PERK_POLICY_VERSION,
       profileId: data.profileId,
       perkPoints: data.perkPoints,
       perks: data.perks,

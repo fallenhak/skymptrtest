@@ -44,9 +44,13 @@ export class PerkSyncService extends ClientListener {
     private preMenuPerks = new Set<number>();
     private statsMenuIsOpen = false;
     private hasRequestedInitialSync = false;
+    private lastSyncRequest = 0;
+    private pendingSync: any = null;
 
     constructor(private sp: Sp, private controller: CombinedController) {
         super();
+
+        this.controller.emitter.on("connectionAccepted", () => { this.hasRequestedInitialSync = false; this.lastSyncRequest = 0; this.pendingSync = null; });
 
         // Gelen sunucu paketlerini dinle
         this.controller.emitter.on("customPacketMessage", (e) => this.onCustomPacketMessage(e));
@@ -57,10 +61,14 @@ export class PerkSyncService extends ClientListener {
 
         // Oyuncu dünyada aktifleştiğinde ilk eşitlemeyi iste
         this.controller.on("update", () => {
-            if (!this.hasRequestedInitialSync) {
+            if (this.pendingSync && !this.statsMenuIsOpen && this.sp.Game.getPlayer()?.getParentCell()) {
+                this.handleSyncPerks(this.pendingSync);
+                this.pendingSync = null;
+            }
+            if (!this.hasRequestedInitialSync && Date.now() - this.lastSyncRequest > 3000) {
                 const player = this.sp.Game.getPlayer();
                 if (player && player.getFormID() !== 0) {
-                    this.hasRequestedInitialSync = true;
+                    this.lastSyncRequest = Date.now();
                     this.requestSyncFromServer();
                 }
             }
@@ -150,7 +158,8 @@ export class PerkSyncService extends ClientListener {
         if (!content || !content.customPacketType) return;
 
         if (content.customPacketType === "syncPerks") {
-            this.handleSyncPerks(content);
+            this.hasRequestedInitialSync = true;
+            this.pendingSync = content;
         } else if (content.customPacketType === "selectPerkRejected") {
             this.handleSelectPerkRejected(content);
         }
@@ -164,6 +173,18 @@ export class PerkSyncService extends ClientListener {
         if (typeof content.perkPoints === "number") {
             this.sp.Game.setPerkPoints(content.perkPoints);
             logTrace(this, `Synchronized perk points: ${content.perkPoints}`);
+        }
+
+        // Remove managed perks absent from the authoritative snapshot.
+        if (Array.isArray(content.perks)) {
+            for (const id of this.monitoredPerks) {
+                const perk = this.sp.Perk.from(this.sp.Game.getFormEx(id));
+                if (perk && player.hasPerk(perk) && !content.perks.includes(id)) player.removePerk(perk);
+            }
+        }
+        for (const skill of ["Smithing", "Alchemy", "Enchanting"]) {
+            const level = content.skills?.[skill];
+            if (Number.isFinite(level) && level >= 0 && level <= 100) player.setActorValue(skill, level);
         }
 
         // Onaylanmış perkleri yükle
@@ -183,10 +204,11 @@ export class PerkSyncService extends ClientListener {
         if (!player) return;
 
         const perkId = content.perkId;
+        if (!Number.isInteger(perkId) || perkId <= 0) return;
         const perkObj = this.sp.Perk.from(this.sp.Game.getFormEx(perkId));
         if (perkObj && player.hasPerk(perkObj)) {
             player.removePerk(perkObj);
-            this.sp.Game.addPerkPoints(1);
+            // The server follows rejection with an authoritative point snapshot.
             logError(this, `Perk 0x${perkId.toString(16)} rejected by server (${content.reason || 'unauthorized'}), reverted.`);
         }
     }

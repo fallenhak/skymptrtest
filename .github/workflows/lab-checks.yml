@@ -40,7 +40,15 @@ jobs:
         shell: pwsh
         run: ./scripts/build-client.ps1
       - name: Test manifest routing and failures
-        run: node --test skymp5-client/tests/settingsService.test.cjs
+        run: node --test skymp5-client/tests/settingsService.test.cjs skymp5-client/tests/perkSyncService.test.cjs
       - name: Build tracked game frontend
         shell: pwsh
         run: ./scripts/build-front.ps1
+      - name: Install server dependencies
+        working-directory: skymp5-server
+        run: npm exec --yes --package=yarn@1.22.22 -- yarn install --frozen-lockfile
+      - name: Check server TypeScript
+        working-directory: skymp5-server
+        run: npx tsc --noEmit
+      - name: Test character creation and perk rules
+        run: node --test skymp5-server/tests/rpSystems.test.cjs

@@ -3,7 +3,7 @@
 > **Amaç:** Bu belge, SkyMP TR projesinde çalışan yapay zeka modelleri (LLM), kodlama ajanları ve geliştiriciler arasındaki bağlam kaybını önlemek, mimari kararları, son yapılan geliştirmeleri ve çalışma kurallarını eksiksiz aktarmak için hazırlanmıştır.
 
 **Son Güncelleme:** 7 Eylül 2026  
-**Aktif Dal (Branch):** `codex/local-game-profile`  
+**Aktif Dal (Branch):** `codex/character-perks-voice`
 **GitHub Deposu:** [fallenhak/skymptrtest](https://github.com/fallenhak/skymptrtest) (Görünürlük: **PUBLIC**)  
 **Son Canlı Sürüm (Release):** [v5.0.0](https://github.com/fallenhak/skymptrtest/releases/tag/v5.0.0)  
 
@@ -212,3 +212,15 @@ Tüm komutlar depo kökünde (`C:\Users\kerim\Documents\ChatGPT\SkyMPTR Test`) �
 - Öncelik: oyuncu kimliği/olay akışını tek sunucu uygulamasında bağlamak; güncelleme bütünlüğünü ve hedef yollarını düzeltmek; perk koşullarını ve tekrar isteklerini doğrulamak; ses oturumunu oyun girişine bağlamak. Sonra temiz kurulum ve iki oyuncu kabul testi.
 - Bu turda yalnızca belgeler değişti. İşlevsel hatalar henüz düzeltilmedi. Ham izole inceleme araçları `.local/review-antigravity` altında; oyun varlıkları ve test çıktısı exe Git dışında.
 - Kayıt yolu için mevcut çözüm `LocalSaves=false` ve `Saves\\` kullanıyor; eski belgelerdeki profil başına kayıt izolasyonu artık geçerli değil. Güncel test yalnızca yol hizasını doğruluyor. Kullanıcı sorunlarını paylaşınca mevcut oyun durumunu esas alarak devam edin.
+
+## 8. 7 Eylül 2026 — Üç ağaç deneyi ve karakter oluşturma düzeltmesi
+
+- Aktif geliştirme dalı: `codex/character-perks-voice`. Kullanıcı mevcut üç ağaçla başlamayı onayladı. Geçici kurallar ve oyun kontrol adımları: `docs/PERK_LAB_TR.md`.
+- `Spawn`: görünümü olmayan mevcut karakterde oluşturma yeniden istenir; yeni karakterde menü bayrağı aktör istemciye verilmeden önce ayarlanır. İstemci istek geldiğinde dünya/hücre hazır olana ve yükleme menüsü kapanana kadar bekler. Canlı oyun doğrulaması bekleniyor.
+- `shared/rp/perkRules.ts`: 6 perk izin listesi, seviye ve ön koşul kontrolü; yeni profillere 3 puan ve 30/20/20 seviyeleri. Mevcut oyuncu dosyaları korunur. Bozuk kayıt sessizce sıfırlanmaz. Aynı son-puan talebi tekrar gelirse tekrar ücret alınmaz.
+- `PerkSyncService`: sunucudaki puan/seviye/perk durumunu dünya yüklenince ve StatsMenu kapalıyken uygular; onaysız yönetilen perkleri kaldırır. Ret paketinde körlemesine puan iadesi kaldırıldı. İlk eşitleme yanıt alınana kadar tekrar istenir.
+- `gamemode.js` içindeki ikinci perk uygulaması kaldırıldı. Sohbet profili gerçek kullanıcı aktöründen alınır; tanımsız `userProfiles` referansları kaldırıldı. Sohbet adı `data/chat` altında tutulur, eski perk dosyasındaki rpName sadece okunarak taşınır; perk dosyasını sohbet yazmaz.
+- Derlenmiş sunucu JS/map ve istemci JS yerel lab'a yedekli `scripts/deploy-lab-code.ps1` ile aktarıldı. Native dosyalar/dünya/kayıtlar korunuyor. Temiz hazırlamadan sonra bu dağıtım adımı gerekir; eski release otomatik güncellenmedi.
+- Doğrulama: istemci webpack, sunucu TypeScript/esbuild başarılı; 6 yeni davranış testi + 14 manifest testi başarılı. Yerel native sunucu başlangıcı ve beş-master manifest smoke testi geçti. Bunlar iki oyuncu, oyun menüsü veya üretim etkisi doğrulaması değildir. CI'a sunucu tip denetimi ve yeni testler eklendi.
+- Kullanıcının diğer gereksinimleri halen açık: fısıltı/normal/bağırma, gerçek mikrofon seviyesine tepki veren oyun içi gösterge, Skyrim/Nordic tarzı UI. Bunlar bu test paketinde uygulanmadı. Ses oturum kimliği ve yakınlık kontrolüyle birlikte ele alınmalı; eski ses protokolünün güvenliği çözülmüş sayılmamalı.
+- Sonraki somut adım: kullanıcı lab girişinde karakter menüsünü ve üç ağaçtaki puan/seviye/seçim kalıcılığını kontrol ederken ses/HUD uygulamasına devam etmek. Faalgrin'in açık oyun sürecine dokunulmadı.
