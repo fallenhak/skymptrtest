@@ -22,6 +22,7 @@ import { Spawn } from "./systems/spawn";
 import { Login } from "./systems/login";
 import { DiscordBanSystem } from "./systems/discordBanSystem";
 import { MasterApiBalanceSystem } from "./systems/masterApiBalanceSystem";
+import { PerkSystem } from "./systems/perkSystem";
 import { EventEmitter } from "events";
 import { pid } from "process";
 import * as fs from "fs";
@@ -197,6 +198,7 @@ const main = async () => {
     new Login(log, maxPlayers, master, port, masterKey, offlineMode),
     new DiscordBanSystem(),
     new MasterApiBalanceSystem(log, maxPlayers, master, port, masterKey, offlineMode),
+    new PerkSystem(log),
   );
 
   setupStreams(scampNative.getScampNative());

@@ -191,6 +191,22 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
   - Kullanıcı butona bastığında `modpack.zip`'i canlı ilerleme çubuğuyla indirir, doğrudan Stock Game `Data\` klasörüne açar ve yerel sürümü günceller.
   - Güncelleme tamamlanmadan hiç kimse eski modlarla sunucuya giriş yapamaz. Güncelleme bitince buton `OYUNA BAŞLA` olarak yeşile döner.
 
+## 15. Custom Skills Framework ile Menü Filtreleme ve Kalıcı Perk Sistemi — 7 Eylül
+
+- **Yetenek Menüsünü Sınırlama (Curated StatsMenu):**
+  - Custom Skills Framework (v3.1.0) MO2 içerisine `07_Custom_Skills_Framework` bağımsız modu olarak yerleştirildi.
+  - `Data/SKSE/Plugins/CustomSkills/SKILLS.json` yapılandırmasıyla gökyüzü takımyıldız menüsü yalnızca belirlenen 3 zanaat dalına (`Smithing`, `Alchemy`, `Enchanting`) sınırlandırıldı. Diğer 15 savaş/büyü yeteneği menüden tamamen gizlendi.
+- **Sunucu Kalıcı Perk Sistemi (`skymp5-server` & `gamemode.js`):**
+  - Oyuncu bazında (`data/players/{profileId}.json`) kalıcı seviye, kalan perk puanı ve onaylanan perk listesi tutuldu.
+  - Yeni karakterler 1 başlangıç perk puanıyla başlar.
+  - `requestSelectPerk` özel paketi geldiğinde sunucu kalan puanı kontrol eder, puanı 1 düşer, perki kaydeder ve `syncPerks` ile istemciye onay döner. Puan yetersizse `selectPerkRejected` ile reddeder.
+- **İstemci Perk Eşitleme Servisi (`skymp5-client`):**
+  - `PerkSyncService` istemciye entegre edildi.
+  - `StatsMenu` açıldığında mevcut perkleri hafızaya alır, menü kapandığında oyuncunun seçtiği perki tespit edip sunucuya onay isteği yollar.
+  - Sunucu onayladığında perk aktif kalır; reddederse yerel olarak geri alınır ve puan iade edilir.
+  - Oyuna girişte sunucudan gelen `syncPerks` ile oyuncunun tüm perkleri ve puanı otomatik yüklenir.
+- **Mod Dağıtımı:** Mod paketi v4 olarak paketlendi (`modpack.zip`), dağıtım arşivi `dist/SkyMPTR-StockGame-Installer.zip` güncellendi.
+
 
 
 
