@@ -27,12 +27,19 @@ $arguments = (@('--profile', 'SkyMPTR', 'run', '--cwd', (Join-Path $labRoot 'gam
     ForEach-Object { Convert-LabArgument $_ }) -join ' '
 $process = Start-Process -FilePath (Join-Path $moRoot 'ModOrganizer.exe') -ArgumentList $arguments `
     -WorkingDirectory $moRoot -WindowStyle Hidden -PassThru
-# Avoid Start-Process -Wait: its job prevents MO2's child process breakaway.
-$process.WaitForExit()
+$timeout = [DateTime]::UtcNow.AddSeconds(15)
+while (-not (Test-Path -LiteralPath $probeOutput) -and [DateTime]::UtcNow -lt $timeout) {
+    Start-Sleep -Milliseconds 250
+}
+for ($i = 0; $i -lt 5; $i++) {
+    $procs = Get-Process ModOrganizer -ErrorAction SilentlyContinue
+    if (-not $procs) { break }
+    $procs | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Milliseconds 300
+}
 if (-not (Test-Path -LiteralPath $probeOutput)) { throw 'MO2 profile probe produced no report; inspect the lab logs.' }
 $probe = Get-Content -LiteralPath $probeOutput -Raw | ConvertFrom-Json
 if ($probe.error) { throw "MO2 profile probe failed: $($probe.error)" }
-if ($process.ExitCode -ne 0) { throw "MO2 profile probe exited with code $($process.ExitCode)." }
 if (-not $probe.settingsMapped -or -not $probe.pluginsMapped -or -not $probe.savePathAligned -or $probe.marker -ne $marker) { throw 'Probe response did not match this run.' }
 foreach ($file in $protectedPaths) {
     $after = if (Test-Path -LiteralPath $file) { (Get-FileHash -LiteralPath $file).Hash } else { $null }

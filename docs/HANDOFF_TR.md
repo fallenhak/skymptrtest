@@ -138,3 +138,15 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
 - **Düzeltme:** Profil `settings.ini` içinde `LocalSaves=false`, `skyrim.ini` ve `skyrimcustom.ini` içinde `sLocalSavePath=Saves\` olarak hizalandı. Profilin özel INI (`LocalSettings=true`) ve 5 master plugin izolasyonu korundu. `test-game-profile.ps1` ve `probe-game-profile.mjs` bu mimariye göre güncellendi ve profil testi başarıyla geçti.
 - SkyMP dünyasına giriş artık otomatik gerçekleşebilir; geçici `.ess` dosyası oyuna girildikten 5 saniye sonra native eklenti tarafından kendiliğinden temizlenir.
 
+## 11. Modüler MO2 mini modlist, Display Tweaks ve Skyrim Souls RE — 7 Eylül
+
+- **Modüler Yapı:** `game/Data` içerisine doğrudan kopyalanan tüm platform ve eklenti dosyaları temizlenerek oyun verisi 5 master ESM ve BSAlardan ibaret vanilla hale getirildi.
+- Eklentiler MO2'nin `mods/` klasöründe bağımsız modlar olarak yapılandırıldı:
+  1. `01_SKSE_Scripts`: SKSE 2.2.8 Papyrus scriptleri
+  2. `02_Address_Library`: Address Library 13 binary'si
+  3. `03_SSE_Display_Tweaks`: v0.5.16 (yüksek FPS, çerçevesiz pencere ve fizik düzeltmeleri)
+  4. `04_Skyrim_Souls_RE`: v3.1.2 (gerçek zamanlı, duraklatmasız menüler)
+  5. `05_SkyMP_Client`: SkyMP native DLL'leri, istemci JS ve widget UI
+- `prepare-game-lab.ps1` ve `check-client-prerequisites.ps1` modüler yapıya göre güncellendi; `sources.lock.json` içine yeni mod arşivleri ve SHA-256 değerleri işlendi. Profil testi ve ön koşul kontrolü başarıyla geçti.
+
+

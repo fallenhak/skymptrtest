@@ -64,15 +64,53 @@ $skseRoot = Join-Path $labRoot "extracted/skse/$($lock.gameLab.skse.archiveRoot)
 Get-ChildItem -LiteralPath $skseRoot -File | Where-Object { $_.Extension -in @('.dll', '.exe') } | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination $gameRoot
 }
-Copy-Item -LiteralPath (Join-Path $skseRoot 'Data') -Destination $gameRoot -Recurse -Force
-Copy-Item -LiteralPath (Join-Path $clientRoot 'Data') -Destination $gameRoot -Recurse -Force
-Copy-Item -LiteralPath (Join-Path $labRoot 'extracted/address-library/SKSE') -Destination (Join-Path $gameRoot 'Data') -Recurse -Force
-Copy-Item -LiteralPath $frontRoot -Destination (Join-Path $gameRoot 'Data/Platform') -Recurse -Force
-New-Item -ItemType Directory -Path (Join-Path $gameRoot 'Data/Platform/PluginsDev') -Force | Out-Null
-
+$modsRoot = Join-Path $moRoot 'mods'
 foreach ($dir in @('mods', 'downloads', 'overwrite', 'profiles/SkyMPTR/saves')) {
     New-Item -ItemType Directory -Path (Join-Path $moRoot $dir) -Force | Out-Null
 }
+
+# 01_SKSE_Scripts
+$mod1 = Join-Path $modsRoot '01_SKSE_Scripts'
+New-Item -ItemType Directory -Path $mod1 -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $skseRoot 'Data/Scripts') -Destination $mod1 -Recurse -Force
+
+# 02_Address_Library
+$mod2Plugins = Join-Path $modsRoot '02_Address_Library/SKSE/Plugins'
+New-Item -ItemType Directory -Path $mod2Plugins -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $labRoot 'extracted/address-library/SKSE/Plugins') -Destination (Join-Path $modsRoot '02_Address_Library/SKSE') -Recurse -Force
+
+# 03_SSE_Display_Tweaks
+$displayTweaksArchive = 'C:\Users\kerim\Games\Faalgrin\Downloads\SSE Display Tweaks-34705-0-5-16-1703410713.zip'
+if (Test-Path -LiteralPath $displayTweaksArchive) {
+    $mod3 = Join-Path $modsRoot '03_SSE_Display_Tweaks'
+    New-Item -ItemType Directory -Path $mod3 -Force | Out-Null
+    tar -xf $displayTweaksArchive -C $mod3
+}
+
+# 04_Skyrim_Souls_RE
+$skyrimSoulsArchive = 'C:\Users\kerim\Games\Faalgrin\Downloads\Skyrim Souls RE - Unpaused Menus-27859-3-1-2-1779355258.zip'
+if (Test-Path -LiteralPath $skyrimSoulsArchive) {
+    $mod4 = Join-Path $modsRoot '04_Skyrim_Souls_RE'
+    New-Item -ItemType Directory -Path $mod4 -Force | Out-Null
+    tar -xf $skyrimSoulsArchive -C $mod4
+}
+
+# 05_SkyMP_Client
+$mod5 = Join-Path $modsRoot '05_SkyMP_Client'
+New-Item -ItemType Directory -Path $mod5 -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $clientRoot 'Data/Platform') -Destination $mod5 -Recurse -Force
+Copy-Item -LiteralPath $frontRoot -Destination (Join-Path $mod5 'Platform') -Recurse -Force
+New-Item -ItemType Directory -Path (Join-Path $mod5 'Platform/PluginsDev') -Force | Out-Null
+
+$mod5Plugins = Join-Path $mod5 'SKSE/Plugins'
+New-Item -ItemType Directory -Path $mod5Plugins -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $clientRoot 'Data/SKSE/Plugins/SkyrimPlatform.dll') -Destination $mod5Plugins -Force
+Copy-Item -LiteralPath (Join-Path $clientRoot 'Data/SKSE/Plugins/MpClientPlugin.dll') -Destination $mod5Plugins -Force
+
+$mod5Interface = Join-Path $mod5 'Interface'
+New-Item -ItemType Directory -Path $mod5Interface -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $clientRoot 'Data/Interface/CombatAlertOverlayMenu.swf') -Destination $mod5Interface -Force
+
 $qtGameRoot = $gameRoot.Replace('\', '/')
 Write-LabText (Join-Path $moRoot 'portable.txt') 'SkyMP TR isolated instance'
 Write-LabText (Join-Path $moRoot 'ModOrganizer.ini') @"
@@ -89,7 +127,14 @@ profile_local_inis=true
 profile_local_saves=false
 "@
 Write-LabText (Join-Path $profileRoot 'settings.ini') "[General]`r`nLocalSaves=false`r`nLocalSettings=true`r`n"
-Write-LabText (Join-Path $profileRoot 'modlist.txt') "# SkyMP files are installed in this isolated game's Data directory.`r`n"
+$modList = @(
+    '+05_SkyMP_Client',
+    '+04_Skyrim_Souls_RE',
+    '+03_SSE_Display_Tweaks',
+    '+02_Address_Library',
+    '+01_SKSE_Scripts'
+) -join "`r`n"
+Write-LabText (Join-Path $profileRoot 'modlist.txt') $modList
 Write-LabText (Join-Path $profileRoot 'plugins.txt') (($masters | ForEach-Object { "*$_" }) -join "`r`n")
 Write-LabText (Join-Path $profileRoot 'loadorder.txt') ($masters -join "`r`n")
 $gameIni = Get-Content -LiteralPath (Join-Path $sourceRoot 'Skyrim_Default.ini') -Raw
@@ -108,8 +153,8 @@ $provenance = [ordered]@{
     sourceGameDirectory = $sourceRoot
     copiedDataFiles = @($dataFiles | ForEach-Object { @{ name = $_.Name; bytes = $_.Length } })
     sourceExeSha256 = (Get-FileHash -LiteralPath (Join-Path $sourceRoot 'SkyrimSE.exe')).Hash
-    clientScriptSha256 = (Get-FileHash -LiteralPath (Join-Path $gameRoot 'Data/Platform/Plugins/skymp5-client.js')).Hash
-    frontendSha256 = (Get-FileHash -LiteralPath (Join-Path $gameRoot 'Data/Platform/UI/build.js')).Hash
+    clientScriptSha256 = (Get-FileHash -LiteralPath (Join-Path $modsRoot '05_SkyMP_Client/Platform/Plugins/skymp5-client.js')).Hash
+    frontendSha256 = (Get-FileHash -LiteralPath (Join-Path $modsRoot '05_SkyMP_Client/Platform/UI/build.js')).Hash
     upstreamCommit = $lock.skymp.commit
     nativeArtifactRunId = $lock.clientArtifact.runId
     dependencies = $lock.gameLab

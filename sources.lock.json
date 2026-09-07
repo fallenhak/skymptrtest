@@ -45,6 +45,16 @@
       "version": "2.5.2",
       "url": "https://github.com/ModOrganizer2/modorganizer/releases/download/v2.5.2/Mod.Organizer-2.5.2.7z",
       "sha256": "E6376EFD87FD5DDD95AEE959405E8F067AFA526EA6C2C0C5AA03C5108BF4A815"
+    },
+    "displayTweaks": {
+      "version": "0.5.16",
+      "archiveName": "SSE Display Tweaks-34705-0-5-16-1703410713.zip",
+      "sha256": "08B8BC6F548CF12AA82A234166EFE10851BFB994D02393F2E716754E6B3174E0"
+    },
+    "skyrimSouls": {
+      "version": "3.1.2",
+      "archiveName": "Skyrim Souls RE - Unpaused Menus-27859-3-1-2-1779355258.zip",
+      "sha256": "90E838DC3F4B186832A7B5DFB06FA2E9CF71CB2B3595B39ED09526806026660B"
     }
   },
   "serverArtifact": {

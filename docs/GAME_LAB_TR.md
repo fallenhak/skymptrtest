@@ -75,3 +75,14 @@ MO2 üzerinden yanlışlıkla indirilen CC paketleri `overwrite` içine düşebi
 SkyMP'nin resmi native çalışma eklentisi (`SkyrimPlatformImpl.dll` / `LoadGame.cpp`), sunucu bağlantısında oyuncuyu dünyaya sokmak için geçici bir bootstrap kaydı (`TESMODPLATFORM-<GUID>.ess`) oluşturur ve `saveLoadManager->Load` çağırır. Bu yol C++ binary içinde sabit olarak `Documents\My Games\Skyrim Special Edition\Saves\` altına yazılır ve dünyada 5 saniye sonra `LoadGameEventSink` tarafından otomatik silinir.
 
 MO2 profilinde `LocalSaves=true` ve `sLocalSavePath=__MO_Saves\` ayarlandığında, Skyrim motoru kaydı `__MO_Saves\` içinde arar fakat native DLL fiziksel `Saves\` altına yazdığı için otomatik yükleme başarısız olur ve ana menüde kalınır. Bu nedenle lab profili `LocalSaves=false` ve `sLocalSavePath=Saves\` olarak yapılandırılır; INI (`LocalSettings=true`) ve plugin izolasyonu korunur.
+
+## Modüler MO2 Mini Modlist ve İstemci Eklentileri
+
+`game/Data` klasörünü vanilla tutmak ve modları MO2 üzerinden yönetilebilir kılmak için istemci bileşenleri ayrı mod paketlerine bölünmüştür:
+1. `01_SKSE_Scripts`: SKSE 2.2.8 Papyrus betikleri.
+2. `02_Address_Library`: Sürüm 13 adres kütüphanesi binary'si (`versionlib-1-6-1170-0.bin`).
+3. `03_SSE_Display_Tweaks`: Çerçevesiz pencere, FPS kilidi açma ve yüksek yenileme hızı fizik düzeltmeleri (`v0.5.16`).
+4. `04_Skyrim_Souls_RE`: Gerçek zamanlı, duraklatmasız menüler (`v3.1.2`, multiplayer senkronizasyonu için kritik).
+5. `05_SkyMP_Client`: SkyMP Platform native binary'leri (`SkyrimPlatform.dll`, `MpClientPlugin.dll`), istemci JS mantığı ve widget arayüzü.
+
+`game/Data` yalnızca vanilla 5 master ESM ve temel BSA'lardan oluşur; MO2 sol listesinde tüm bileşenler aktif (`+`) olarak görünür ve yapılandırmaları bağımsız yönetilebilir.
