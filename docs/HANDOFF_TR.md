@@ -257,6 +257,25 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
 - **Yeniden Derleme:**
   - C# başlatıcı `scripts/build-launcher.ps1` ile derlendi, `dist/SkyMPTR-Launcher/SkyMPTR-Launcher.exe` ve `dist/SkyMPTR-StockGame-Installer.zip` güncellendi.
 
+## 18. GitHub Releases CDN Entegrasyonu & Hafif İstemci Dağıtım Modeli — 7 Eylül
+
+- **Depo Görünürlüğü ve Halka Açık CDN Altyapısı:**
+  - Depo `fallenhak/skymptrtest` kullanıcının onayıyla **PUBLIC** hale getirildi.
+  - Böylece GitHub Releases varlıkları (`https://github.com/fallenhak/skymptrtest/releases/latest/download/...`) herhangi bir token veya kimlik doğrulama gerektirmeksizin tüm oyuncular için ultra hızlı ve ücretsiz bir küresel CDN haline geldi.
+- **Tek Başına 76 KB'lık Başlatıcı Dağıtımı (`SkyMPTR-Launcher.exe`):**
+  - Arkadaşlara 200 MB boyutundaki büyük arşivleri gönderme zorunluluğu ortadan kalktı. Sadece ~76 KB boyutundaki `SkyMPTR-Launcher.exe` dosyasını Discord/Telegram vb. üzerinden paylaşmak yeterlidir.
+  - **Otomatik Veri Paketi İndirici (`EnsureCompanionDataDownloaded`):**
+    - Başlatıcı çalıştırıldığında yerelde `SkyMPTR-Data.zip` veya lab klasörü arar.
+    - Bulamazsa, arka planda donmadan GitHub Releases CDN'i üzerinden (`https://github.com/fallenhak/skymptrtest/releases/latest/download/SkyMPTR-Data.zip`) veri paketini canlı MB ve yüzde göstergesiyle indirir ve kuruluma devam eder.
+- **Çift Kaynaklı Akıllı Mod Eşitleyici (Dual-Source Mod Updater):**
+  - **Sunucu Açıkken:** Yerel sunucudan (`http://<ServerIP>:3000/modpack.zip`) yüksek hızlı LAN/VPN aktarımı.
+  - **Sunucu Kapalı veya Zaman Aşımı Durumunda:** Başlatıcı otomatik olarak GitHub Releases üzerindeki `modpack-version.json` ve `modpack.zip` dosyalarını sorgular.
+  - Sunucu kapalıyken bile GitHub'da daha yeni bir mod paketi varsa kullanıcıya altın sarısı `"Sunucu Kapali | GitHub Mod Paketi (vX)"` rozeti ve `"GUNCELLEMEYI INDIR (GitHub vX)"` butonu gösterilir. Oyuncular sunucu açılmadan önce güncellemelerini önceden tamamlayabilir.
+- **Otomasyon ve Canlı Yayın:**
+  - `scripts/publish-github-release.ps1` betiği eklendi: Tek komutla mod paketini eşitler, başlatıcıyı derler ve GitHub CLI (`gh release create/upload -R fallenhak/skymptrtest --clobber`) ile resmi release yayınlar.
+  - GitHub üzerinde `v5.0.0` resmi sürümü yayınlandı; `SkyMPTR-Launcher.exe`, `SkyMPTR-Data.zip`, `SkyMPTR-StockGame-Installer.zip`, `modpack.zip` ve `modpack-version.json` varlıkları yüklendi ve HTTP 200 doğrulaması yapıldı.
+
+
 
 
 

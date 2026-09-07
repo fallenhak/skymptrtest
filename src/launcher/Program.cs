@@ -509,35 +509,62 @@ public class LauncherWindow {
         }));
 
         string url = string.Format("http://{0}:3000/modpack-version.json", serverIp);
+        string githubVersionUrl = "https://github.com/fallenhak/skymptrtest/releases/latest/download/modpack-version.json";
+        bool serverOnline = false;
+        string json = null;
 
         try {
-            string json = "";
             using (WebClient wc = new WebClient()) {
                 wc.Headers.Add("User-Agent", "SkyMPTR-Launcher");
                 var task = wc.DownloadStringTaskAsync(new Uri(url));
                 if (await Task.WhenAny(task, Task.Delay(3500)) == task) {
                     json = await task;
-                } else {
-                    throw new Exception("Sunucu yanit vermedi (zaman asimi).");
+                    serverOnline = true;
                 }
             }
+        } catch {
+            serverOnline = false;
+        }
 
+        if (serverOnline && !string.IsNullOrEmpty(json)) {
             serverModpackVersion = ExtractJsonInt(json, "version");
             serverModpackHash = ExtractJsonString(json, "hash");
             serverModpackSizeBytes = ExtractJsonLong(json, "sizeBytes");
-
-            string localFile = Path.Combine(dest, "installed-version.json");
-            localModpackVersion = 0;
-            localModpackHash = "";
-            if (File.Exists(localFile)) {
-                try {
-                    string localJson = File.ReadAllText(localFile);
-                    localModpackVersion = ExtractJsonInt(localJson, "version");
-                    localModpackHash = ExtractJsonString(localJson, "hash");
-                } catch { }
+        } else {
+            // Sunucu kapali veya yanit vermediyse GitHub Releases uzerindeki en guncel mod surumune bak
+            string ghJson = null;
+            try {
+                using (WebClient wcGh = new WebClient()) {
+                    wcGh.Headers.Add("User-Agent", "SkyMPTR-Launcher");
+                    var ghTask = wcGh.DownloadStringTaskAsync(new Uri(githubVersionUrl));
+                    if (await Task.WhenAny(ghTask, Task.Delay(3500)) == ghTask) {
+                        ghJson = await ghTask;
+                    }
+                }
+            } catch {
+                ghJson = null;
             }
 
-            window.Dispatcher.Invoke(new Action(() => {
+            if (!string.IsNullOrEmpty(ghJson)) {
+                serverModpackVersion = ExtractJsonInt(ghJson, "version");
+                serverModpackHash = ExtractJsonString(ghJson, "hash");
+                serverModpackSizeBytes = ExtractJsonLong(ghJson, "sizeBytes");
+            }
+        }
+
+        string localFile = Path.Combine(dest, "installed-version.json");
+        localModpackVersion = 0;
+        localModpackHash = "";
+        if (File.Exists(localFile)) {
+            try {
+                string localJson = File.ReadAllText(localFile);
+                localModpackVersion = ExtractJsonInt(localJson, "version");
+                localModpackHash = ExtractJsonString(localJson, "hash");
+            } catch { }
+        }
+
+        window.Dispatcher.Invoke(new Action(() => {
+            if (serverOnline) {
                 lblServerStatus.Text = string.Format("Sunucu Aktif (Mod Paketi v{0})", serverModpackVersion);
                 lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
 
@@ -555,21 +582,29 @@ public class LauncherWindow {
                     lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
                     progressBar.Value = 100;
                 }
-                btnReinstall.Visibility = Visibility.Visible;
-            }));
-        } catch (Exception ex) {
-            window.Dispatcher.Invoke(new Action(() => {
-                lblServerStatus.Text = "Sunucu Cevrimdisi";
-                lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
-                lblStatusText.Text = string.Format("[!] Sunucuya baglanilamadi ({0}:3000): {1}", serverIp, ex.Message);
-                lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(230, 126, 34));
+            } else {
+                // Sunucu cevrimdisi
+                if (serverModpackVersion > localModpackVersion) {
+                    updateRequired = true;
+                    lblServerStatus.Text = string.Format("Sunucu Kapali | GitHub Mod Paketi (v{0})", serverModpackVersion);
+                    lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(212, 175, 55));
+                    btnMainAction.Content = string.Format("GUNCELLEMEYI INDIR (GitHub v{0})", serverModpackVersion);
+                    btnMainAction.Background = new SolidColorBrush(Color.FromRgb(230, 126, 34));
+                    lblStatusText.Text = string.Format("[!] GitHub'da yeni mod paketi var (v{0}). Sunucu kapaliyken de guncelleyebilirsiniz.", serverModpackVersion);
+                    lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(230, 126, 34));
+                } else {
+                    lblServerStatus.Text = "Sunucu Cevrimdisi";
+                    lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
+                    lblStatusText.Text = string.Format("[!] Sunucuya baglanilamadi ({0}:3000). Modlar yerel olarak hazir (v{1}).", serverIp, localModpackVersion);
+                    lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(230, 126, 34));
 
-                updateRequired = false;
-                btnMainAction.Content = "OYUNA BASLA (Cevrimdisi)";
-                btnMainAction.Background = new SolidColorBrush(Color.FromRgb(70, 75, 95));
-                btnReinstall.Visibility = Visibility.Visible;
-            }));
-        }
+                    updateRequired = false;
+                    btnMainAction.Content = "OYUNA BASLA (Cevrimdisi)";
+                    btnMainAction.Background = new SolidColorBrush(Color.FromRgb(70, 75, 95));
+                }
+            }
+            btnReinstall.Visibility = Visibility.Visible;
+        }));
     }
 
     private void BrowseSourceDirectory() {
@@ -741,6 +776,47 @@ public class LauncherWindow {
         UpdateProgress(100, "Kurulum tamamlandi!");
     }
 
+    private void EnsureCompanionDataDownloaded(string dest) {
+        string appDir = AppDomain.CurrentDomain.BaseDirectory;
+        string zipPath = Path.Combine(appDir, "SkyMPTR-Data.zip");
+        if (File.Exists(zipPath)) return;
+
+        string labDir = Path.Combine(appDir, @"..\..\.local\skymp-756fb86\skyrim-1.6.1170\lab-player-1\game");
+        if (Directory.Exists(labDir)) return;
+
+        UpdateProgress(60, "SkyMP TR veri paketi GitHub'dan indiriliyor...");
+        string githubDataUrl = "https://github.com/fallenhak/skymptrtest/releases/latest/download/SkyMPTR-Data.zip";
+        string tempZip = zipPath + ".tmp";
+        if (File.Exists(tempZip)) File.Delete(tempZip);
+
+        try {
+            using (WebClient wc = new WebClient()) {
+                wc.Headers.Add("User-Agent", "SkyMPTR-Launcher");
+                ManualResetEvent done = new ManualResetEvent(false);
+                Exception dlErr = null;
+                wc.DownloadProgressChanged += (s, e) => {
+                    double mbRec = e.BytesReceived / 1048576.0;
+                    double mbTotal = e.TotalBytesToReceive > 0 ? e.TotalBytesToReceive / 1048576.0 : 206.0;
+                    int pct = 60 + (int)(e.ProgressPercentage * 0.14);
+                    UpdateProgress(pct, string.Format("GitHub'dan paket indiriliyor: %{0} ({1:0.0} / {2:0.0} MB)", e.ProgressPercentage, mbRec, mbTotal));
+                };
+                wc.DownloadFileCompleted += (s, e) => {
+                    if (e.Error != null) dlErr = e.Error;
+                    done.Set();
+                };
+                wc.DownloadFileAsync(new Uri(githubDataUrl), tempZip);
+                done.WaitOne();
+                if (dlErr != null) throw dlErr;
+            }
+            if (File.Exists(tempZip)) {
+                File.Move(tempZip, zipPath);
+            }
+        } catch (Exception ex) {
+            if (File.Exists(tempZip)) File.Delete(tempZip);
+            throw new Exception("GitHub'dan SkyMPTR-Data.zip indirilemedi:\n" + ex.Message);
+        }
+    }
+
     private void ExtractDowngradeBinaries(string dest) {
         string appDir = AppDomain.CurrentDomain.BaseDirectory;
         string bundledExe = Path.Combine(appDir, @"downgrade\SkyrimSE.exe");
@@ -750,6 +826,7 @@ public class LauncherWindow {
             CopyFileIfDifferent(bundledExe, Path.Combine(dest, "SkyrimSE.exe"));
             if (File.Exists(bundledBink)) CopyFileIfDifferent(bundledBink, Path.Combine(dest, "bink2w64.dll"));
         } else {
+            EnsureCompanionDataDownloaded(dest);
             string zipPath = Path.Combine(appDir, "SkyMPTR-Data.zip");
             if (File.Exists(zipPath)) {
                 using (ZipArchive zip = ZipFile.OpenRead(zipPath)) {
@@ -765,6 +842,7 @@ public class LauncherWindow {
     }
 
     private void ExtractCompanionData(string dest) {
+        EnsureCompanionDataDownloaded(dest);
         string appDir = AppDomain.CurrentDomain.BaseDirectory;
         string zipPath = Path.Combine(appDir, "SkyMPTR-Data.zip");
 
@@ -805,20 +883,45 @@ public class LauncherWindow {
         string dest = txtDestPath.Text.Trim();
         string serverIp = txtServerIp.Text.Trim();
         string downloadUrl = string.Format("http://{0}:3000/modpack.zip", serverIp);
+        string githubDownloadUrl = "https://github.com/fallenhak/skymptrtest/releases/latest/download/modpack.zip";
         string tempZip = Path.Combine(dest, "modpack_update.tmp.zip");
 
         try {
             UpdateProgress(0, "Guncelleme paketi indiriliyor...");
             if (File.Exists(tempZip)) File.Delete(tempZip);
 
-            using (WebClient wc = new WebClient()) {
-                wc.Headers.Add("User-Agent", "SkyMPTR-Launcher");
-                wc.DownloadProgressChanged += (s, e) => {
-                    double mbRec = e.BytesReceived / 1048576.0;
-                    double mbTotal = e.TotalBytesToReceive > 0 ? e.TotalBytesToReceive / 1048576.0 : (serverModpackSizeBytes / 1048576.0);
-                    UpdateProgress(e.ProgressPercentage, string.Format("Mod paketi indiriliyor: %{0} ({1:0.0} / {2:0.0} MB)", e.ProgressPercentage, mbRec, mbTotal));
-                };
-                await wc.DownloadFileTaskAsync(new Uri(downloadUrl), tempZip);
+            bool downloaded = false;
+            // 1. Once yerel sunucuyu dene
+            try {
+                using (WebClient wc = new WebClient()) {
+                    wc.Headers.Add("User-Agent", "SkyMPTR-Launcher");
+                    wc.DownloadProgressChanged += (s, e) => {
+                        double mbRec = e.BytesReceived / 1048576.0;
+                        double mbTotal = e.TotalBytesToReceive > 0 ? e.TotalBytesToReceive / 1048576.0 : (serverModpackSizeBytes / 1048576.0);
+                        UpdateProgress(e.ProgressPercentage, string.Format("Sunucudan mod paketi indiriliyor: %{0} ({1:0.0} / {2:0.0} MB)", e.ProgressPercentage, mbRec, mbTotal));
+                    };
+                    var dlTask = wc.DownloadFileTaskAsync(new Uri(downloadUrl), tempZip);
+                    if (await Task.WhenAny(dlTask, Task.Delay(4000)) == dlTask) {
+                        await dlTask;
+                        if (File.Exists(tempZip) && new FileInfo(tempZip).Length > 1000) {
+                            downloaded = true;
+                        }
+                    }
+                }
+            } catch { }
+
+            // 2. Sunucu yanit vermezse GitHub Releases'den son hizda indir
+            if (!downloaded) {
+                if (File.Exists(tempZip)) File.Delete(tempZip);
+                using (WebClient wc = new WebClient()) {
+                    wc.Headers.Add("User-Agent", "SkyMPTR-Launcher");
+                    wc.DownloadProgressChanged += (s, e) => {
+                        double mbRec = e.BytesReceived / 1048576.0;
+                        double mbTotal = e.TotalBytesToReceive > 0 ? e.TotalBytesToReceive / 1048576.0 : (serverModpackSizeBytes / 1048576.0);
+                        UpdateProgress(e.ProgressPercentage, string.Format("GitHub'dan mod paketi indiriliyor: %{0} ({1:0.0} / {2:0.0} MB)", e.ProgressPercentage, mbRec, mbTotal));
+                    };
+                    await wc.DownloadFileTaskAsync(new Uri(githubDownloadUrl), tempZip);
+                }
             }
 
             UpdateProgress(90, "Guncelleme dosyalari cikartiliyor...");

@@ -147,6 +147,11 @@ if (-not (Test-Path -LiteralPath $finalDir)) { New-Item -ItemType Directory -Pat
 if (Test-Path -LiteralPath $finalZip) { Remove-Item -LiteralPath $finalZip -Force }
 
 [System.IO.Compression.ZipFile]::CreateFromDirectory($buildDir, $finalZip, [System.IO.Compression.CompressionLevel]::Fastest, $false)
+
+$standaloneDir = Join-Path $projectRoot 'dist/SkyMPTR-Launcher'
+if (-not (Test-Path -LiteralPath $standaloneDir)) { New-Item -ItemType Directory -Path $standaloneDir -Force | Out-Null }
+Copy-Item -LiteralPath (Join-Path $buildDir '*') -Destination $standaloneDir -Recurse -Force
+
 Remove-Item -LiteralPath $buildDir -Recurse -Force
 
 $mb = [math]::Round(((Get-Item -LiteralPath $finalZip).Length / 1MB), 2)
