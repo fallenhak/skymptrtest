@@ -69,3 +69,9 @@ MO2 davranışı [resmi profil kodu](https://github.com/ModOrganizer2/modorganiz
 Bu lab yalnızca beş temel master kullanır. `SkyrimPrefs.ini` dosyasının `[General]` bölümündeki `bFreebiesSeen=1`, AE indirme teklifinin tekrar gösterilmesini önlemek için hazırlanır. Ayarın davranışı [Step Mods INI incelemesinde](https://stepmodifications.org/wiki/Guide:SkyrimPrefs_INI/General#bFreebiesSeen) açıklanır; 1.6.1170 EXE içinde anahtar da bulundu. Bu makinede ayar eklendi, sonraki açılışta ekran sonucu bekleniyor.
 
 MO2 üzerinden yanlışlıkla indirilen CC paketleri `overwrite` içine düşebilir. Skyrim ve MO2 kapalıyken yalnızca lab’a yeni eklenen `cc*.esl/esm/esp/bsa` dosyalarını lab içindeki bir yedeğe taşıyın; bütün `overwrite` klasörünü silmeyin. Profilin yükleme sırasını beş master’a geri döndürün ve `test-game-profile.ps1` çalıştırın. İlk olayda sekiz CC dosyası yedeklendi, diğer ayarlar korundu ve profil testi geçti. Güncel hata ve doğrulama durumu HANDOFF_TR.md bölüm 9’da kayıtlıdır.
+
+## SkyMP native kayıt yolu ve MO2 profil hizalaması
+
+SkyMP'nin resmi native çalışma eklentisi (`SkyrimPlatformImpl.dll` / `LoadGame.cpp`), sunucu bağlantısında oyuncuyu dünyaya sokmak için geçici bir bootstrap kaydı (`TESMODPLATFORM-<GUID>.ess`) oluşturur ve `saveLoadManager->Load` çağırır. Bu yol C++ binary içinde sabit olarak `Documents\My Games\Skyrim Special Edition\Saves\` altına yazılır ve dünyada 5 saniye sonra `LoadGameEventSink` tarafından otomatik silinir.
+
+MO2 profilinde `LocalSaves=true` ve `sLocalSavePath=__MO_Saves\` ayarlandığında, Skyrim motoru kaydı `__MO_Saves\` içinde arar fakat native DLL fiziksel `Saves\` altına yazdığı için otomatik yükleme başarısız olur ve ana menüde kalınır. Bu nedenle lab profili `LocalSaves=false` ve `sLocalSavePath=Saves\` olarak yapılandırılır; INI (`LocalSettings=true`) ve plugin izolasyonu korunur.

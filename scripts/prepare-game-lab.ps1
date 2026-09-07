@@ -86,20 +86,20 @@ version=2.5.2
 
 [Settings]
 profile_local_inis=true
-profile_local_saves=true
+profile_local_saves=false
 "@
-Write-LabText (Join-Path $profileRoot 'settings.ini') "[General]`r`nLocalSaves=true`r`nLocalSettings=true`r`n"
+Write-LabText (Join-Path $profileRoot 'settings.ini') "[General]`r`nLocalSaves=false`r`nLocalSettings=true`r`n"
 Write-LabText (Join-Path $profileRoot 'modlist.txt') "# SkyMP files are installed in this isolated game's Data directory.`r`n"
 Write-LabText (Join-Path $profileRoot 'plugins.txt') (($masters | ForEach-Object { "*$_" }) -join "`r`n")
 Write-LabText (Join-Path $profileRoot 'loadorder.txt') ($masters -join "`r`n")
 $gameIni = Get-Content -LiteralPath (Join-Path $sourceRoot 'Skyrim_Default.ini') -Raw
-$gameIni = $gameIni.Replace('[General]', "[General]`r`nsLocalSavePath=__MO_Saves\")
+$gameIni = $gameIni.Replace('[General]', "[General]`r`nsLocalSavePath=Saves\")
 Write-LabText (Join-Path $profileRoot 'skyrim.ini') $gameIni
 $preferences = Get-Content -LiteralPath (Join-Path $sourceRoot 'Medium.ini') -Raw
 $preferences = $preferences.Replace('[General]', "[General]`r`nbFreebiesSeen=1")
 $preferences = $preferences.Replace('[Display]', "[Display]`r`nbFull Screen=0`r`nbBorderless=0`r`niSize W=1280`r`niSize H=720")
 Write-LabText (Join-Path $profileRoot 'skyrimprefs.ini') $preferences
-Write-LabText (Join-Path $profileRoot 'skyrimcustom.ini') "[General]`r`nsLocalSavePath=__MO_Saves\`r`n"
+Write-LabText (Join-Path $profileRoot 'skyrimcustom.ini') "[General]`r`nsLocalSavePath=Saves\`r`n"
 
 $provenance = [ordered]@{
     preparedAtUtc = [DateTime]::UtcNow.ToString('o')

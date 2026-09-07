@@ -12,8 +12,11 @@ if (Get-Process SkyrimSE, skse64_loader, ModOrganizer -ErrorAction SilentlyConti
     throw 'Close the running Skyrim/SKSE/Mod Organizer session before starting this isolated test.'
 }
 $profileSettings = Get-Content -LiteralPath (Join-Path $moRoot 'profiles/SkyMPTR/settings.ini') -Raw
-if ($profileSettings -notmatch '(?m)^LocalSaves=true\s*$' -or $profileSettings -notmatch '(?m)^LocalSettings=true\s*$') {
-    throw 'Enable profile-specific saves and game INI files in the SkyMPTR profile before starting.'
+if ($profileSettings -notmatch '(?m)^LocalSettings=true\s*$') {
+    throw 'Enable profile-specific game INI files in the SkyMPTR profile before starting.'
+}
+if ($profileSettings -match '(?m)^LocalSaves=true\s*$') {
+    throw 'SkyMP native runtime requires standard save path (LocalSaves=false in settings.ini).'
 }
 function Convert-LabArgument([string]$Value) {
     return '"' + ($Value -replace '(\\*)"', '$1$1\"' -replace '(\\+)$', '$1$1') + '"'

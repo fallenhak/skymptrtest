@@ -130,3 +130,11 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
 - Aynı ilk günlükte `Cannot read properties of null (reading 'getFormID')` ve `Equipment.inv.entries[].count ... NUMBER_OUT_OF_RANGE` hataları vardı. Bunların CC indirmesi/ilk yüklemeyle ilişkisi kanıtlanmadı; envanter protokolünü tahminle değiştirmeyin. Temiz açılışta yeniden oluşursa istemci ekipman paketindeki gerçek count değerini ve native dönüştürme yolunu inceleyin.
 - Platform, NirnLabUIPlatform dinleyicisini bulamadı ve legacy Tilted UI backend’ine geçti. Mevcut frontend bu backend’de oyun içinde ayrıca doğrulanmalı.
 - Temizlik sonrası gerçek MO2 profil testi tekrar geçti (09:22:34 UTC). İlk açılışın SKSE/Platform günlükleri aynı yerel yedekte, temizlik kaydı lab kökünde `cc-cleanup.json`. Sunucu oyun denemesi için çalışmaya devam ediyor; PID’yi varsaymak yerine port/süreç kontrolü yapın.
+ 
+## 10. SkyMP bootstrap kayıt yolu ve otomatik dünyaya giriş — 7 Eylül
+ 
+- **Bulgu:** İstemci sunucuya bağlandığında dünyayı otomatik yükleyemeyip ana menüde kalıyordu. Neden: Upstream resmi derlemesindeki `SkyrimPlatformImpl.dll` ([LoadGame.cpp](file:///c:/Users/kerim/Documents/ChatGPT/SkyMPTR%20Test/skyrim-platform/src/platform_se/skyrim_platform/LoadGame.cpp#L125-L130)), geçici ışınlanma kaydını (`TESMODPLATFORM-<GUID>.ess`) sabit olarak `Documents\My Games\Skyrim Special Edition\Saves\` altına yazmaktadır.
+- MO2 profilinde `LocalSaves=true` ve `sLocalSavePath=__MO_Saves\` ayarlandığı için Skyrim motoru kaydı `__MO_Saves\` içinde arıyor ve bulamıyordu. Skyrim menüye ulaştıktan sonra klasöre dosya kopyalamak da Scaleform menüyü yenilemediğinden menüde "Yükle" seçeneği çıkmıyordu.
+- **Düzeltme:** Profil `settings.ini` içinde `LocalSaves=false`, `skyrim.ini` ve `skyrimcustom.ini` içinde `sLocalSavePath=Saves\` olarak hizalandı. Profilin özel INI (`LocalSettings=true`) ve 5 master plugin izolasyonu korundu. `test-game-profile.ps1` ve `probe-game-profile.mjs` bu mimariye göre güncellendi ve profil testi başarıyla geçti.
+- SkyMP dünyasına giriş artık otomatik gerçekleşebilir; geçici `.ess` dosyası oyuna girildikten 5 saniye sonra native eklenti tarafından kendiliğinden temizlenir.
+

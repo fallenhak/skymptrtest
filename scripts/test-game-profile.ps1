@@ -33,11 +33,7 @@ if (-not (Test-Path -LiteralPath $probeOutput)) { throw 'MO2 profile probe produ
 $probe = Get-Content -LiteralPath $probeOutput -Raw | ConvertFrom-Json
 if ($probe.error) { throw "MO2 profile probe failed: $($probe.error)" }
 if ($process.ExitCode -ne 0) { throw "MO2 profile probe exited with code $($process.ExitCode)." }
-if (-not $probe.settingsMapped -or -not $probe.pluginsMapped -or $probe.marker -ne $marker) { throw 'Probe response did not match this run.' }
-$markerName = "skymptr-probe-$marker.txt"
-$profileMarker = Join-Path $moRoot "profiles/SkyMPTR/saves/$markerName"
-$globalMarker = Join-Path $myGamesPath "__MO_Saves/$markerName"
-if (-not (Test-Path -LiteralPath $profileMarker) -or (Test-Path -LiteralPath $globalMarker)) { throw 'Save writes were not isolated to the profile.' }
+if (-not $probe.settingsMapped -or -not $probe.pluginsMapped -or -not $probe.savePathAligned -or $probe.marker -ne $marker) { throw 'Probe response did not match this run.' }
 foreach ($file in $protectedPaths) {
     $after = if (Test-Path -LiteralPath $file) { (Get-FileHash -LiteralPath $file).Hash } else { $null }
     if ($before[$file] -ne $after) { throw "Original settings changed: $file" }
@@ -47,7 +43,7 @@ $report = [ordered]@{
     profileId = $ProfileId
     settingsMapped = $true
     pluginsMapped = $true
-    saveWriteIsolated = $true
+    savePathAligned = $true
     originalSettingsUnchanged = $true
     scope = 'Actual MO2 filesystem probe through Node; Skyrim gameplay/native compatibility is a separate test'
 }
