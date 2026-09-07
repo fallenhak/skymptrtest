@@ -55,6 +55,13 @@
       "version": "3.1.2",
       "archiveName": "Skyrim Souls RE - Unpaused Menus-27859-3-1-2-1779355258.zip",
       "sha256": "90E838DC3F4B186832A7B5DFB06FA2E9CF71CB2B3595B39ED09526806026660B"
+    },
+    "engineFixes": {
+      "version": "7.0.20",
+      "archiveName": "Engine Fixes - Main File-17230-7-0-20-1772078239.7z",
+      "sha256": "5D1384ACFB523ABD1333F5AF71AF0B7D131B6EBB1A0EE6B3EDFF86FB4C93ADF3",
+      "preloaderArchiveName": "Engine Fixes - SKSE64 Preloader-17230-7-1771936758.7z",
+      "preloaderSha256": "CF366987DA6237559EB6E113EA717EC21762C9EEC3A87D9DC4FA9DDFE7789C26"
     }
   },
   "serverArtifact": {

@@ -147,6 +147,7 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
   3. `03_SSE_Display_Tweaks`: v0.5.16 (yüksek FPS, çerçevesiz pencere ve fizik düzeltmeleri)
   4. `04_Skyrim_Souls_RE`: v3.1.2 (gerçek zamanlı, duraklatmasız menüler)
   5. `05_SkyMP_Client`: SkyMP native DLL'leri, istemci JS ve widget UI
+  6. `06_Engine_Fixes`: v7.0.20 (oyun motoru düzeltmeleri ve d3dx9_42.dll preloader)
 - `prepare-game-lab.ps1` ve `check-client-prerequisites.ps1` modüler yapıya göre güncellendi; `sources.lock.json` içine yeni mod arşivleri ve SHA-256 değerleri işlendi. Profil testi ve ön koşul kontrolü başarıyla geçti.
 
 

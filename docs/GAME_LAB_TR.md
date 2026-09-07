@@ -84,5 +84,6 @@ MO2 profilinde `LocalSaves=true` ve `sLocalSavePath=__MO_Saves\` ayarlandığın
 3. `03_SSE_Display_Tweaks`: Çerçevesiz pencere, FPS kilidi açma ve yüksek yenileme hızı fizik düzeltmeleri (`v0.5.16`).
 4. `04_Skyrim_Souls_RE`: Gerçek zamanlı, duraklatmasız menüler (`v3.1.2`, multiplayer senkronizasyonu için kritik).
 5. `05_SkyMP_Client`: SkyMP Platform native binary'leri (`SkyrimPlatform.dll`, `MpClientPlugin.dll`), istemci JS mantığı ve widget arayüzü.
+6. `06_Engine_Fixes`: SSE Engine Fixes (`v7.0.20`, oyun motoru bellek ve sistem yamaları) ve kök dizinde preloader (`d3dx9_42.dll`).
 
 `game/Data` yalnızca vanilla 5 master ESM ve temel BSA'lardan oluşur; MO2 sol listesinde tüm bileşenler aktif (`+`) olarak görünür ve yapılandırmaları bağımsız yönetilebilir.

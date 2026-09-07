@@ -115,6 +115,40 @@ $mod5Interface = Join-Path $mod5 'Interface'
 New-Item -ItemType Directory -Path $mod5Interface -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $clientRoot 'Data/Interface/CombatAlertOverlayMenu.swf') -Destination $mod5Interface -Force
 
+# 06_Engine_Fixes
+$engineFixesPreloader = 'C:\Users\kerim\Games\Faalgrin\Modlist\Stock Game\d3dx9_42.dll'
+if (Test-Path -LiteralPath $engineFixesPreloader) {
+    Copy-Item -LiteralPath $engineFixesPreloader -Destination $gameRoot -Force
+} else {
+    $engineFixesPreloaderArchive = 'C:\Users\kerim\Games\Faalgrin\Downloads\Engine Fixes - SKSE64 Preloader-17230-7-1771936758.7z'
+    if (Test-Path -LiteralPath $engineFixesPreloaderArchive) {
+        $tempPreload = Join-Path $labRoot 'extracted/engine-fixes-preloader'
+        New-Item -ItemType Directory -Path $tempPreload -Force | Out-Null
+        & tar.exe -xf $engineFixesPreloaderArchive -C $tempPreload
+        if (Test-Path -LiteralPath (Join-Path $tempPreload 'd3dx9_42.dll')) {
+            Copy-Item -LiteralPath (Join-Path $tempPreload 'd3dx9_42.dll') -Destination $gameRoot -Force
+        }
+    }
+}
+$engineFixesMod = 'C:\Users\kerim\Games\Faalgrin\Modlist\mods\EngineFixes\SKSE'
+if (Test-Path -LiteralPath $engineFixesMod) {
+    $mod6 = Join-Path $modsRoot '06_Engine_Fixes'
+    New-Item -ItemType Directory -Path $mod6 -Force | Out-Null
+    Copy-Item -Path $engineFixesMod -Destination $mod6 -Recurse -Force
+} else {
+    $engineFixesArchive = 'C:\Users\kerim\Games\Faalgrin\Downloads\Engine Fixes - Main File-17230-7-0-20-1772078239.7z'
+    if (Test-Path -LiteralPath $engineFixesArchive) {
+        $mod6 = Join-Path $modsRoot '06_Engine_Fixes'
+        $mod6Plugins = Join-Path $mod6 'SKSE/Plugins'
+        New-Item -ItemType Directory -Path $mod6Plugins -Force | Out-Null
+        $tempMain = Join-Path $labRoot 'extracted/engine-fixes-main'
+        New-Item -ItemType Directory -Path $tempMain -Force | Out-Null
+        & tar.exe -xf $engineFixesArchive -C $tempMain
+        Copy-Item -Path (Join-Path $tempMain 'EngineFixes FOMOD Installer/Required/SKSE/Plugins/*') -Destination $mod6Plugins -Force
+        Copy-Item -Path (Join-Path $tempMain 'EngineFixes FOMOD Installer/AE/SKSE/Plugins/*') -Destination $mod6Plugins -Force
+    }
+}
+
 $qtGameRoot = $gameRoot.Replace('\', '/')
 Write-LabText (Join-Path $moRoot 'portable.txt') 'SkyMP TR isolated instance'
 Write-LabText (Join-Path $moRoot 'ModOrganizer.ini') @"
@@ -132,6 +166,7 @@ profile_local_saves=false
 "@
 Write-LabText (Join-Path $profileRoot 'settings.ini') "[General]`r`nLocalSaves=false`r`nLocalSettings=true`r`n"
 $modList = @(
+    '+06_Engine_Fixes',
     '+05_SkyMP_Client',
     '+04_Skyrim_Souls_RE',
     '+03_SSE_Display_Tweaks',
