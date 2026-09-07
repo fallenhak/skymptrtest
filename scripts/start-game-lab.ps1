@@ -25,7 +25,7 @@ function Convert-LabArgument([string]$Value) {
 }
 # Start-Process -Wait creates a job that conflicts with MO2's CREATE_BREAKAWAY_FROM_JOB.
 # Wait on MO2 itself instead; GUI executables do not reliably set LASTEXITCODE.
-$arguments = (@('-m', '--profile', 'SkyMPTR', 'run', '--cwd', $gameRoot, (Join-Path $gameRoot 'skse64_loader.exe')) |
+$arguments = (@('--multiple', '--profile', 'SkyMPTR', 'run', '--cwd', $gameRoot, (Join-Path $gameRoot 'skse64_loader.exe')) |
     ForEach-Object { Convert-LabArgument $_ }) -join ' '
 $process = Start-Process -FilePath (Join-Path $moRoot 'ModOrganizer.exe') -ArgumentList $arguments `
     -WorkingDirectory $moRoot -WindowStyle Hidden -PassThru
