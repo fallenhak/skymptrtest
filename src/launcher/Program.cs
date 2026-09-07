@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -465,15 +466,19 @@ public class LauncherWindow {
         string dest = txtDestPath.Text.Trim();
         string loader = Path.Combine(dest, "skse64_loader.exe");
         string platform = Path.Combine(dest, @"Data\SKSE\Plugins\SkyrimPlatform.dll");
+        string skyrimEsm = Path.Combine(dest, @"Data\Skyrim.esm");
 
         if (File.Exists(loader) && File.Exists(platform)) {
             await CheckForServerUpdatesAsync();
         } else {
-            btnMainAction.Content = "KURULUMU YAP VE OYNA";
+            bool hasPartial = File.Exists(skyrimEsm);
+            btnMainAction.Content = hasPartial ? "KURULUMU TAMAMLA (Kaldigi Yerden)" : "KURULUMU YAP VE OYNA";
             btnMainAction.Background = new SolidColorBrush(Color.FromRgb(212, 175, 55));
-            btnReinstall.Visibility = Visibility.Collapsed;
-            lblStatusText.Text = "Kurulum icin 'Kurulumu Yap' butonuna basin.";
-            lblServerStatus.Text = "Kurulum bekleniyor...";
+            btnReinstall.Visibility = hasPartial ? Visibility.Visible : Visibility.Collapsed;
+            lblStatusText.Text = hasPartial 
+                ? "Daha once kopyalanan dosyalar tespit edildi. Eksik dosyalardan devam etmek icin butona basin."
+                : "Kurulum icin 'Kurulumu Yap' butonuna basin.";
+            lblServerStatus.Text = hasPartial ? "Eksik Dosyalar Var (Devam Edilebilir)" : "Kurulum bekleniyor...";
             lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(141, 147, 168));
             progressBar.Value = 0;
         }
@@ -637,36 +642,59 @@ public class LauncherWindow {
         Directory.CreateDirectory(destData);
 
         // 1. Temel oyun bilesenleri
-        UpdateProgress(10, "Temel oyun master dosyalari (ESM) kopyalaniyor...");
+        UpdateProgress(8, "Master dosyalar (ESM) kontrol ediliyor...");
         string sourceData = Path.Combine(source, "Data");
         string[] masters = new string[] { "Skyrim.esm", "Update.esm", "Dawnguard.esm", "HearthFires.esm", "Dragonborn.esm" };
-        foreach (string m in masters) {
+        for (int i = 0; i < masters.Length; i++) {
+            string m = masters[i];
             string srcFile = Path.Combine(sourceData, m);
+            string dstFile = Path.Combine(destData, m);
             if (File.Exists(srcFile)) {
-                File.Copy(srcFile, Path.Combine(destData, m), true);
+                bool skipped = CopyFileIfDifferent(srcFile, dstFile);
+                int pct = 8 + (int)((i + 1) * 12.0 / masters.Length);
+                string status = skipped 
+                    ? string.Format("ESM ({0}/{1}): {2} [Zaten mevcut, atlandi]", i + 1, masters.Length, m)
+                    : string.Format("ESM kopyalaniyor ({0}/{1}): {2}...", i + 1, masters.Length, m);
+                UpdateProgress(pct, status);
             }
         }
 
-        UpdateProgress(25, "Temel oyun grafik ve ses paketleri (BSA) kopyalaniyor...");
-        string[] bsaFiles = Directory.GetFiles(sourceData, "*.bsa");
-        int count = 0;
-        foreach (string bsa in bsaFiles) {
+        UpdateProgress(20, "Grafik ve ses paketleri (BSA) listeleniyor...");
+        string[] allBsa = Directory.GetFiles(sourceData, "*.bsa");
+        List<string> bsaFiles = new List<string>();
+        foreach (string bsa in allBsa) {
             string name = Path.GetFileName(bsa);
             if (name.StartsWith("Skyrim", StringComparison.OrdinalIgnoreCase) ||
                 name.StartsWith("Dawnguard", StringComparison.OrdinalIgnoreCase) ||
                 name.StartsWith("HearthFires", StringComparison.OrdinalIgnoreCase) ||
                 name.StartsWith("Dragonborn", StringComparison.OrdinalIgnoreCase)) {
-                File.Copy(bsa, Path.Combine(destData, name), true);
-                count++;
+                bsaFiles.Add(bsa);
             }
         }
 
-        UpdateProgress(50, "Calistirici ve kutuphaneler hazirlaniyor...");
+        for (int i = 0; i < bsaFiles.Count; i++) {
+            string bsa = bsaFiles[i];
+            string name = Path.GetFileName(bsa);
+            string dstBsa = Path.Combine(destData, name);
+            FileInfo fi = new FileInfo(bsa);
+            double mb = fi.Length / 1048576.0;
+            int pct = 20 + (int)((i + 1) * 35.0 / (bsaFiles.Count > 0 ? bsaFiles.Count : 1));
+            
+            bool alreadyExists = File.Exists(dstBsa) && new FileInfo(dstBsa).Length == fi.Length && fi.Length > 0;
+            if (alreadyExists) {
+                UpdateProgress(pct, string.Format("BSA ({0}/{1}): {2} ({3:0} MB) [Zaten mevcut, atlandi]", i + 1, bsaFiles.Count, name, mb));
+            } else {
+                UpdateProgress(pct, string.Format("BSA kopyalaniyor ({0}/{1}): {2} ({3:0} MB)...", i + 1, bsaFiles.Count, name, mb));
+                CopyFileIfDifferent(bsa, dstBsa);
+            }
+        }
+
+        UpdateProgress(55, "Calistirici ve kutuphaneler kontrol ediliyor...");
         string[] binaries = new string[] { "SkyrimSELauncher.exe", "steam_api64.dll", "Skyrim_Default.ini" };
         foreach (string b in binaries) {
             string srcFile = Path.Combine(source, b);
             if (File.Exists(srcFile)) {
-                File.Copy(srcFile, Path.Combine(dest, b), true);
+                CopyFileIfDifferent(srcFile, Path.Combine(dest, b));
             }
         }
         File.WriteAllText(Path.Combine(dest, "Skyrim.ccc"), "");
@@ -678,16 +706,16 @@ public class LauncherWindow {
         string binkDest = Path.Combine(dest, "bink2w64.dll");
 
         if (isExactVersion) {
-            UpdateProgress(60, "Uyumlu 1.6.1170 calistirici kopyalaniyor...");
-            File.Copy(exeSrc, exeDest, true);
-            if (File.Exists(binkSrc)) File.Copy(binkSrc, binkDest, true);
+            UpdateProgress(60, "1.6.1170 calistirici kontrol ediliyor...");
+            CopyFileIfDifferent(exeSrc, exeDest);
+            if (File.Exists(binkSrc)) CopyFileIfDifferent(binkSrc, binkDest);
         } else {
             UpdateProgress(60, "Oyun 1.6.1170 surumune downgrade ediliyor...");
             ExtractDowngradeBinaries(dest);
         }
 
         // 3. Modlar, SKSE ve SkyMP Client Kurulumu
-        UpdateProgress(75, "SKSE, Engine Fixes, Display Tweaks ve SkyMP paketleri aciliyor...");
+        UpdateProgress(75, "SKSE, Engine Fixes, Display Tweaks ve SkyMP paketleri kontrol ediliyor...");
         ExtractCompanionData(dest);
 
         // 4. Ayarlarin Yapilandirilmasi
@@ -704,8 +732,8 @@ public class LauncherWindow {
         string bundledBink = Path.Combine(appDir, @"downgrade\bink2w64.dll");
 
         if (File.Exists(bundledExe)) {
-            File.Copy(bundledExe, Path.Combine(dest, "SkyrimSE.exe"), true);
-            if (File.Exists(bundledBink)) File.Copy(bundledBink, Path.Combine(dest, "bink2w64.dll"), true);
+            CopyFileIfDifferent(bundledExe, Path.Combine(dest, "SkyrimSE.exe"));
+            if (File.Exists(bundledBink)) CopyFileIfDifferent(bundledBink, Path.Combine(dest, "bink2w64.dll"));
         } else {
             string zipPath = Path.Combine(appDir, "SkyMPTR-Data.zip");
             if (File.Exists(zipPath)) {
@@ -713,7 +741,7 @@ public class LauncherWindow {
                     foreach (ZipArchiveEntry entry in zip.Entries) {
                         if (entry.FullName.Equals("SkyrimSE.exe", StringComparison.OrdinalIgnoreCase) ||
                             entry.FullName.Equals("bink2w64.dll", StringComparison.OrdinalIgnoreCase)) {
-                            entry.ExtractToFile(Path.Combine(dest, entry.Name), true);
+                            ExtractEntryIfDifferent(entry, Path.Combine(dest, entry.Name));
                         }
                     }
                 }
@@ -727,11 +755,17 @@ public class LauncherWindow {
 
         if (File.Exists(zipPath)) {
             using (ZipArchive zip = ZipFile.OpenRead(zipPath)) {
+                int total = zip.Entries.Count;
+                int cur = 0;
                 foreach (ZipArchiveEntry entry in zip.Entries) {
+                    cur++;
                     if (string.IsNullOrEmpty(entry.Name)) continue;
                     string destPath = Path.Combine(dest, entry.FullName);
-                    Directory.CreateDirectory(Path.GetDirectoryName(destPath));
-                    entry.ExtractToFile(destPath, true);
+                    ExtractEntryIfDifferent(entry, destPath);
+                    if (cur % 25 == 0 || cur == total) {
+                        int pct = 75 + (int)(cur * 15.0 / (total > 0 ? total : 1));
+                        UpdateProgress(pct, string.Format("Mod dosyalari kontrol ediliyor ({0}/{1})...", cur, total));
+                    }
                 }
             }
         } else {
@@ -775,11 +809,17 @@ public class LauncherWindow {
             UpdateProgress(90, "Guncelleme dosyalari cikartiliyor...");
             await Task.Run(() => {
                 using (ZipArchive zip = ZipFile.OpenRead(tempZip)) {
+                    int total = zip.Entries.Count;
+                    int cur = 0;
                     foreach (ZipArchiveEntry entry in zip.Entries) {
+                        cur++;
                         if (string.IsNullOrEmpty(entry.Name)) continue;
                         string destPath = Path.Combine(dest, entry.FullName);
-                        Directory.CreateDirectory(Path.GetDirectoryName(destPath));
-                        entry.ExtractToFile(destPath, true);
+                        ExtractEntryIfDifferent(entry, destPath);
+                        if (cur % 20 == 0 || cur == total) {
+                            int pct = 90 + (int)(cur * 9.0 / (total > 0 ? total : 1));
+                            UpdateProgress(pct, string.Format("Guncelleme dosyalari kuruluyor ({0}/{1})...", cur, total));
+                        }
                     }
                 }
                 if (File.Exists(tempZip)) File.Delete(tempZip);
@@ -930,11 +970,47 @@ public class LauncherWindow {
         return "";
     }
 
+    private static bool CopyFileIfDifferent(string src, string dest) {
+        if (!File.Exists(src)) return false;
+        if (File.Exists(dest)) {
+            try {
+                FileInfo sInfo = new FileInfo(src);
+                FileInfo dInfo = new FileInfo(dest);
+                if (dInfo.Length == sInfo.Length && dInfo.Length > 0) {
+                    return true;
+                }
+            } catch { }
+        }
+        string dir = Path.GetDirectoryName(dest);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
+            Directory.CreateDirectory(dir);
+        }
+        File.Copy(src, dest, true);
+        return false;
+    }
+
+    private static bool ExtractEntryIfDifferent(ZipArchiveEntry entry, string destPath) {
+        if (File.Exists(destPath)) {
+            try {
+                FileInfo fi = new FileInfo(destPath);
+                if (fi.Length == entry.Length && fi.Length > 0) {
+                    return true;
+                }
+            } catch { }
+        }
+        string dir = Path.GetDirectoryName(destPath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
+            Directory.CreateDirectory(dir);
+        }
+        entry.ExtractToFile(destPath, true);
+        return false;
+    }
+
     private static void CopyDirectoryRecursive(string sourceDir, string targetDir) {
         Directory.CreateDirectory(targetDir);
         foreach (string file in Directory.GetFiles(sourceDir)) {
             string dest = Path.Combine(targetDir, Path.GetFileName(file));
-            File.Copy(file, dest, true);
+            CopyFileIfDifferent(file, dest);
         }
         foreach (string dir in Directory.GetDirectories(sourceDir)) {
             string dest = Path.Combine(targetDir, Path.GetFileName(dir));

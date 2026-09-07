@@ -245,6 +245,19 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
   - `dist/SkyMPTR-Launcher/SkyMPTR-Launcher.exe` ve `dist/SkyMPTR-StockGame-Installer.zip` yeniden üretildi.
   - Sunucu mod paketi `v5` sürümüne güncellendi.
 
+## 17. Akıllı Kurulum Devam Etme (Smart Resume) ve Ayrıntılı Dosya İlerlemesi — 7 Eylül
+
+- **Kaldığı Yerden Devam Etme Mantığı (`src/launcher/Program.cs`):**
+  - Önceki kurulum denemelerinde kullanıcı kurulumu durdurduğunda veya yeniden başlattığında, başlatıcı tüm ESM ve 10-15 GB boyutundaki Skyrim BSA paketlerini sıfırdan baştan yazıyordu (`File.Copy(..., true)`).
+  - Başlatıcıya `CopyFileIfDifferent` ve `ExtractEntryIfDifferent` yardımcı metotları eklendi. Hedefte dosya zaten varsa ve dosya boyutu kaynakla tam olarak eşleşiyorsa kopyalama işlemi saliseler içinde atlanır (`[Zaten mevcut, atlandi]`).
+  - Kurulum yarıda kalmışsa veya hedef dizinde kısmi dosyalar varsa başlatıcı durumu otomatik algılar; ana buton `"KURULUMU TAMAMLA (Kaldigi Yerden)"` haline gelir.
+- **Canlı Dosya İlerleme Göstergesi:**
+  - Her bir ESM ve BSA dosyasının adı, sıra numarası ve megabayt cinsinden boyutu (`BSA kopyalaniyor (5/14): Skyrim - Misc.bsa (17 MB)...`) arayüzdeki durum çubuğuna ve yüzde göstergesine canlı olarak yansıtılır.
+  - Mod paketi açılırken veya sunucudan güncelleme inerken her 20-25 dosyada bir arayüz yenilenerek kullanıcının donma şüphesine kapılması önlendi.
+- **Yeniden Derleme:**
+  - C# başlatıcı `scripts/build-launcher.ps1` ile derlendi, `dist/SkyMPTR-Launcher/SkyMPTR-Launcher.exe` ve `dist/SkyMPTR-StockGame-Installer.zip` güncellendi.
+
+
 
 
 
