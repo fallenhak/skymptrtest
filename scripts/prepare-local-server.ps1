@@ -58,7 +58,7 @@ Get-ChildItem -LiteralPath $artifactRoot | ForEach-Object {
 $settings = [ordered]@{
     name = 'SkyMP TR Local Lab'
     port = 7777
-    maxPlayers = 2
+    maxPlayers = 4
     offlineMode = $true
     master = ''
     dataDir = 'data'
@@ -68,7 +68,7 @@ $settings = [ordered]@{
     npcEnabled = $false
     npcSettings = @{}
     gamemodePath = 'gamemode.js'
-    uiListenHost = '127.0.0.1'
+    uiListenHost = '0.0.0.0'
     enableGamemodeDataUpdatesBroadcast = $false
 }
 

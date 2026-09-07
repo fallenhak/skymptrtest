@@ -34,8 +34,13 @@ jobs:
           }
           node --check scripts/test-local-server.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --check scripts/probe-game-profile.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build client from the lockfile
         shell: pwsh
         run: ./scripts/build-client.ps1
       - name: Test manifest routing and failures
         run: node --test skymp5-client/tests/settingsService.test.cjs
+      - name: Build tracked game frontend
+        shell: pwsh
+        run: ./scripts/build-front.ps1

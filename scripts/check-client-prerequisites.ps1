@@ -20,10 +20,14 @@ $missing = @()
 foreach ($file in @('skse64_loader.exe', $skseRuntime)) {
     if (-not (Test-Path -LiteralPath (Join-Path $gameRoot $file) -PathType Leaf)) { $missing += $file }
 }
+$moMods = Join-Path (Split-Path -Parent $gameRoot) 'mod-organizer/mods'
 foreach ($file in @("Data/SKSE/Plugins/$addressLibrary", 'Data/Platform/UI/index.html', 'Data/SKSE/Plugins/SkyrimPlatform.dll', 'Data/SKSE/Plugins/MpClientPlugin.dll')) {
     $inGame = Test-Path -LiteralPath (Join-Path $gameRoot $file) -PathType Leaf
     $inProfile = Test-Path -LiteralPath (Join-Path $clientRoot $file) -PathType Leaf
-    if (-not $inGame -and -not $inProfile) { $missing += $file }
+    $inMods = if (Test-Path -LiteralPath $moMods) {
+        (Get-ChildItem -Path $moMods -Recurse -Filter ([IO.Path]::GetFileName($file)) -ErrorAction SilentlyContinue).Count -gt 0
+    } else { $false }
+    if (-not $inGame -and -not $inProfile -and -not $inMods) { $missing += $file }
 }
 $report = [ordered]@{
     checkedAtUtc = [DateTime]::UtcNow.ToString('o')
@@ -40,3 +44,4 @@ if (Test-Path -LiteralPath $clientRoot) {
 }
 Write-Output $json
 if ($missing.Count -gt 0) { exit 2 }
+exit 0

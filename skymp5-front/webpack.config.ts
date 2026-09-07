@@ -1,7 +1,9 @@
 const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const config = require("./config");
+const config = process.env.SKYMP_FRONT_OUTPUT
+  ? { outputPath: process.env.SKYMP_FRONT_OUTPUT }
+  : require("./config");
 
 const distPath = path.isAbsolute(config.outputPath)
   ? config.outputPath

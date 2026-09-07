@@ -1,0 +1,69 @@
+{
+  "observedOn": "2026-09-07",
+  "upstreamCommit": "756fb86b05ab5c2fae4f9bc3c6d52ca580b8bdd3",
+  "gameVersion": "1.6.1170.0",
+  "sourceExeSha256": "C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9",
+  "nativeArtifactRunId": "33943379757",
+  "clientScriptSha256": "D3D70578A1D804438E5FC1FC04487F3D946DAA56F774A3FE46E93300E7A88AD7",
+  "frontendSha256": "4A4C9A7F7FED6EFC65B59695BCF921B0E053EDFE9ABA5E03D3CEC4F9971E5577",
+  "baseDataFilesCopied": 22,
+  "dependencies": {
+    "skse": {
+      "version": "2.2.8",
+      "url": "https://www.nexusmods.com/skyrimspecialedition/mods/30379?tab=files",
+      "archiveRoot": "skse64_2_02_08",
+      "archiveName": "Skyrim Script Extender (SKSE64) Steam 30379 2.2.8 2026-08-20T08-07Z s6Og0dF9H.7z",
+      "sha256": "ADA6A771E18245CD0A6106B7E019B3B2BDF7A6BEE390BC069C6E0A35F89544FA",
+      "provenance": "Existing local download; embedded readme targets Steam 1.6.1170, installed loader has valid Ian Patterson signature"
+    },
+    "addressLibrary": {
+      "version": "13",
+      "url": "https://www.nexusmods.com/skyrimspecialedition/mods/32444?tab=files&file_id=795954",
+      "sha256": "BE0C7C07FB63FD1C1403690D4797C7A8FDF8799118ACCEB605F285D7B0EE055F"
+    },
+    "modOrganizer": {
+      "version": "2.5.2",
+      "url": "https://github.com/ModOrganizer2/modorganizer/releases/download/v2.5.2/Mod.Organizer-2.5.2.7z",
+      "sha256": "E6376EFD87FD5DDD95AEE959405E8F067AFA526EA6C2C0C5AA03C5108BF4A815"
+    }
+  },
+  "filePrerequisites": "passed",
+  "frontendBuild": "passed locally",
+  "profileIsolation": {
+    "checkedAtUtc": "2026-09-07T09:14:28.9774160Z",
+    "profileId": 1,
+    "settingsMapped": true,
+    "pluginsMapped": true,
+    "saveWriteIsolated": true,
+    "originalSettingsUnchanged": true,
+    "scope": "Actual MO2 filesystem probe through Node; Skyrim gameplay/native compatibility is a separate test"
+  },
+  "launchFix": {
+    "before": "MO2 Error 5 starting Node and SKSE with Start-Process -Wait",
+    "change": "Start-Process -PassThru followed by Process.WaitForExit()",
+    "verifiedAfter": "Node starts through MO2; settings, load order, save isolation and unchanged global settings pass"
+  },
+  "server": "Native readiness and HTTP listener observed with the same five masters as the 1.6.1170 lab",
+  "gameplay": "SKSE loaded Skyrim Platform 2.9.0; server recorded profile 1 login and world spawn at 12:48:44-12:48:57 local. Player entered cell 3c with full exterior load. Automatic bootstrap load and save cleanup verified.",
+  "previousGameTest": {
+    "version": "1.7.104.0",
+    "skse": "2.3.1",
+    "result": "SkyrimPlatformImpl address library open error",
+    "patch": "Candidate under docs/patch-candidates only; native build untested"
+  },
+  "scope": "Local preparation and profile test evidence; no private server features or game assets included",
+  "firstGameErrors": [
+    "Missing Data/Platform/PluginsDev directory (created after the test)",
+    "Null getFormID during initial updates",
+    "Equipment inventory entry count NUMBER_OUT_OF_RANGE",
+    "NirnLabUIPlatform unavailable; legacy Tilted UI selected"
+  ],
+  "ccCleanup": {
+    "packages": 4,
+    "filesBackedUp": 8,
+    "location": "isolated MO2 overwrite only",
+    "bFreebiesSeen": 1,
+    "fiveMasterProfileRecheck": "passed at 2026-09-07T09:22:34Z",
+    "nextGameVerification": "pending"
+  }
+}

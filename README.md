@@ -2,13 +2,13 @@
 
 SkyMP üzerinde ortak geliştirme, iki kişilik yerel testler ve RP perk/meslek sistemi denemeleri için kaynak deposu. SkyMP'nin C++/TypeScript kodu ve upstream Git geçmişi bu repoda bulunur.
 
-**Durum — 6 Eylül 2026:** Sunucu başlangıç testi, kaynak koddan istemci derlemesi ve 14 manifest testi geçti. İstemci mod listesini doğrudan yerel sunucudan alabiliyor. İlk oyuncu paketi ayrı klasörde hazırlandı; SKSE, güncel Address Library ve giriş/UI dosyaları için oyun kurulumu henüz tamamlanmadı. İki oyun istemcisi, karakter kalıcılığı ve perk etkileri hâlâ doğrulanacak.
+**Durum — 7 Eylül 2026:** Tam kaynak kodu ve ekip akışı ana dalda; istemci derlemesi ve 14 manifest testi GitHub CI'da geçti. Repodaki oyun arayüzü de yerelde derlendi. Ayrı MO2 profilinde ayar/kayıt yönlendirmesi doğrulandı. 1.7.104 oyun denemesi CommonLib sürüm tanıma hatasına ulaştı. Faalgrin'in gerçek runtime'ı 1.6.1170 olarak doğrulanınca ilk oynanabilir altyapı bu sürüme yönlendirildi. 1.6.1170’te native yükleme ve ilk offline giriş kaydedildi; AE indirmesinin eklediği CC dosyaları testten çıkarılıp yedeklendi. Dünyaya giriş, iki oyuncu ve perk etkileri henüz doğrulanmadı.
 
 ## Buradan devam edin
 
 1. [Ortak çalışma düzeni](docs/TEAM_WORKFLOW_TR.md): klonlama, dal/worktree, PR ve test akışı.
 2. [Güncel proje durumu](docs/HANDOFF_TR.md): hedefler, tamamlanan işler, açık noktalar ve sıradaki görev.
-3. [Yerel kurulum](docs/LOCAL_SERVER_TR.md): hazırlama, başlatma ve doğrulama komutları.
+3. [Ayrı oyun kurulumu](docs/GAME_LAB_TR.md) ve [yerel sunucu](docs/LOCAL_SERVER_TR.md): hazırlama, başlatma ve doğrulama komutları.
 4. [Perk ve meslek planı](docs/PERK_SYSTEM_PLAN_TR.md): native menü, kalıcılık, RP dengesi ve yeni ağaçlar.
 5. [Teknik bağlam](docs/SKYMP_CONTEXT_TR.md) ve [kaynak kod haritası](docs/SOURCE_MAP_TR.md): mimari, sürümler ve ilgili kod.
 
@@ -22,6 +22,7 @@ GitHub hesabınızın bu private repoya erişimi olmalı. Windows PowerShell'de:
 gh repo clone fallenhak/skymptrtest
 Set-Location skymptrtest
 .\scripts\build-client.ps1
+.\scripts\build-front.ps1
 node --test skymp5-client/tests/settingsService.test.cjs
 ```
 
@@ -46,7 +47,7 @@ Derlenen istemciyle ayrı bir test paketi hazırlamak ve eksikleri görmek için
 .\scripts\check-client-prerequisites.ps1 -SkyrimDirectory 'C:\Games\steamapps\common\Skyrim Special Edition'
 ```
 
-Paket `.local/skymp-756fb86/clients/player-1` altına yazılır; oyun klasörünü değiştirmez. `server-http-url`, yerel manifest adresini belirtir. İkinci oyuncu ve ağ ayarları ortak çalışma belgesindedir.
+Paket `.local/skymp-756fb86/clients/player-1` altına yazılır; oyun klasörünü değiştirmez. Tam oyun testi için [1.6.1170 lab adımlarını](docs/GAME_LAB_TR.md) uygulayın; sunucu ve istemci aynı ESM kopyalarını kullanmalı. `server-http-url`, yerel manifest adresini belirtir. İkinci oyuncu ve ağ ayarları ortak çalışma belgesindedir.
 
 Betikler temiz bir çalışma klasöründe, aynı Windows bilgisayarında doğrulandı. Sonuç ve test sınırları [test kaydında](docs/evidence/2026-09-06-handoff-verification.json). Başka bilgisayarda deneme henüz yapılmadı.
 

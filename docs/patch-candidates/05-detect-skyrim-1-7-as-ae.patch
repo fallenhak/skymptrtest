@@ -1,0 +1,19 @@
+diff --git a/include/REL/Module.h b/include/REL/Module.h
+--- a/include/REL/Module.h
++++ b/include/REL/Module.h
+@@ -169,6 +169,7 @@
+ 						_instance._runtime = Runtime::VR;
+ 						break;
+ 					case 6:
++					case 7:
+ 						_instance._runtime = Runtime::AE;
+ 						break;
+ 					default:
+@@ -340,6 +341,7 @@
+ 						_runtime = Runtime::VR;
+ 						break;
+ 					case 6:
++					case 7:
+ 						_runtime = Runtime::AE;
+ 						break;
+ 					default:
