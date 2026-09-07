@@ -402,8 +402,21 @@ voiceRelay.on('message', (msg, rinfo) => {
       lastSeen: Date.now()
     });
 
-    if (msg.length <= 9) return;
-    const audioPayload = msg.subarray(9);
+    let voiceMode = 1;
+    let audioPayload;
+    if (msg.length >= 10) {
+      voiceMode = msg.readUInt8(9);
+      audioPayload = msg.subarray(10);
+    } else if (msg.length > 9) {
+      audioPayload = msg.subarray(9);
+    } else {
+      return;
+    }
+
+    // Ses moduna göre duyma mesafesi (Fısıltı: 600, Normal: 2200, Bağırma: 5000)
+    let maxDistance = 2200.0;
+    if (voiceMode === 0) maxDistance = 600.0;
+    else if (voiceMode === 2) maxDistance = 5000.0;
 
     // Konuşan oyuncunun koordinatlarını bul
     let speakerActor = 0;
@@ -437,7 +450,7 @@ voiceRelay.on('message', (msg, rinfo) => {
       }
       if (!listenerActor && typeof mp.getUserActor === 'function') {
         for (const uid of connectedUsers) {
-        const pid = getProfileId(uid);
+          const pid = getProfileId(uid);
           if (pid === targetProfileId) {
             listenerActor = mp.getUserActor(uid);
             break;
@@ -458,11 +471,31 @@ voiceRelay.on('message', (msg, rinfo) => {
         const listenerPos = getActorCoordinates(listenerActor);
         if (speakerPos && listenerPos) {
           dist = calculateDistance(speakerPos, listenerPos);
-          if (dist > 2200) {
-            continue; // Duyma mesafesi dışı
+          if (dist > maxDistance) {
+            continue; // Mod mesafesi dışı
           }
-          relX = speakerPos[0] - listenerPos[0];
-          relY = speakerPos[1] - listenerPos[1];
+
+          const dx = speakerPos[0] - listenerPos[0];
+          const dy = speakerPos[1] - listenerPos[1];
+
+          // 3D stereo panning: Dinleyicinin baktığı açıyı (yaw) hesaba kat (R10)
+          let angleArr = null;
+          try {
+            if (typeof mp.get === "function") {
+              angleArr = mp.get(listenerActor, "angle");
+            }
+          } catch (e) {}
+
+          if (Array.isArray(angleArr) && angleArr.length >= 3) {
+            const yawDeg = angleArr[2] || 0.0;
+            const yawRad = (yawDeg * Math.PI) / 180.0;
+            // Skyrim angleZ saat yönünde (+Y North'tan) artar
+            relX = dx * Math.cos(yawRad) - dy * Math.sin(yawRad);
+            relY = dx * Math.sin(yawRad) + dy * Math.cos(yawRad);
+          } else {
+            relX = dx;
+            relY = dy;
+          }
         }
       }
 
@@ -470,8 +503,8 @@ voiceRelay.on('message', (msg, rinfo) => {
       // [0]: uint8 (3 = SPATIAL_VOICE)
       // [1..4]: uint32 (speakerProfileId)
       // [5..8]: float32 (dist)
-      // [9..12]: float32 (relX)
-      // [13..16]: float32 (relY)
+      // [9..12]: float32 (relX_local)
+      // [13..16]: float32 (relY_local)
       // [17..]: PCM ses verisi
       const outPacket = Buffer.alloc(17 + audioPayload.length);
       outPacket.writeUInt8(3, 0);

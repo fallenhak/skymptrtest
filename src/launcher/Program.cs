@@ -932,8 +932,16 @@ public class LauncherWindow {
                     foreach (ZipArchiveEntry entry in zip.Entries) {
                         cur++;
                         if (string.IsNullOrEmpty(entry.Name)) continue;
-                        string destPath = Path.Combine(dest, entry.FullName);
-                        ExtractEntryIfDifferent(entry, destPath);
+                        string destRoot = Path.GetFullPath(dest);
+                        string destPath = Path.GetFullPath(Path.Combine(dest, entry.FullName));
+                        if (!destPath.StartsWith(destRoot + Path.DirectorySeparatorChar) && !destPath.Equals(destRoot, StringComparison.OrdinalIgnoreCase)) {
+                            continue; // Path traversal protection (R3)
+                        }
+                        string entryDir = Path.GetDirectoryName(destPath);
+                        if (!string.IsNullOrEmpty(entryDir) && !Directory.Exists(entryDir)) {
+                            Directory.CreateDirectory(entryDir);
+                        }
+                        entry.ExtractToFile(destPath, true); // Overwrite on modpack update (R2)
                         if (cur % 20 == 0 || cur == total) {
                             int pct = 90 + (int)(cur * 9.0 / (total > 0 ? total : 1));
                             UpdateProgress(pct, string.Format("Guncelleme dosyalari kuruluyor ({0}/{1})...", cur, total));
@@ -1040,16 +1048,23 @@ public class LauncherWindow {
                 if (srvIp == "127.0.0.1" || srvIp.Equals("localhost", StringComparison.OrdinalIgnoreCase)) {
                     srvIp = "127.0.0.1";
                 }
-                voiceManager = new VoiceManager(srvIp, 3001, assignedProfileId);
-                voiceManager.OnTalkStateChanged = (talking) => {
+                voiceManager = new VoiceManager(srvIp, 3001, assignedProfileId, dest);
+                voiceManager.OnTalkStateChanged = (talking, mode) => {
                     window.Dispatcher.Invoke(new Action(() => {
+                        string modeStr = mode == VoiceMode.Whisper ? "Fisilti" : (mode == VoiceMode.Shout ? "Bagirma" : "Normal");
                         if (talking) {
-                            lblMicState.Text = "Konusuluyor...";
+                            lblMicState.Text = string.Format("Konusuluyor... ({0})", modeStr);
                             lblMicState.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
                         } else {
-                            lblMicState.Text = "Hazir";
+                            lblMicState.Text = string.Format("Hazir ({0} - F8)", modeStr);
                             lblMicState.Foreground = new SolidColorBrush(Color.FromRgb(141, 147, 168));
                         }
+                    }));
+                };
+                voiceManager.OnVoiceModeChanged = (mode) => {
+                    window.Dispatcher.Invoke(new Action(() => {
+                        string modeStr = mode == VoiceMode.Whisper ? "Fisilti" : (mode == VoiceMode.Shout ? "Bagirma" : "Normal");
+                        lblMicState.Text = string.Format("Hazir ({0} - F8)", modeStr);
                     }));
                 };
                 voiceManager.Start();
@@ -1143,6 +1158,12 @@ public class LauncherWindow {
     }
 }
 
+public enum VoiceMode {
+    Whisper = 0,
+    Normal = 1,
+    Shout = 2
+}
+
 public class VoiceManager {
     [StructLayout(LayoutKind.Sequential)]
     public struct WAVEFORMATEX {
@@ -1204,6 +1225,7 @@ public class VoiceManager {
 
     private const int WH_KEYBOARD_LL = 13;
     private const int VK_V = 0x56;
+    private const int VK_F8 = 0x77;
     private const int CALLBACK_FUNCTION = 0x00030000;
     private const uint WIM_DATA = 0x3C0;
     private const uint WOM_DONE = 0x3BD;
@@ -1211,9 +1233,11 @@ public class VoiceManager {
     private string serverIp;
     private int serverPort;
     private int profileId;
+    private string gameDirectory;
     private bool isRunning;
     private bool isTalking;
     private uint sequenceNumber;
+    public VoiceMode CurrentMode = VoiceMode.Normal;
 
     private IntPtr hWaveIn = IntPtr.Zero;
     private IntPtr hWaveOut = IntPtr.Zero;
@@ -1225,12 +1249,15 @@ public class VoiceManager {
     private Thread receiveThread;
     private Thread heartbeatThread;
 
-    public Action<bool> OnTalkStateChanged;
+    public Action<bool, VoiceMode> OnTalkStateChanged;
+    public Action<VoiceMode> OnVoiceModeChanged;
 
-    public VoiceManager(string serverIp, int serverPort, int profileId) {
+    public VoiceManager(string serverIp, int serverPort, int profileId, string gameDirectory) {
         this.serverIp = serverIp;
         this.serverPort = serverPort;
         this.profileId = profileId;
+        this.gameDirectory = gameDirectory;
+        WriteVoiceState(false, (int)CurrentMode, 0.0f);
     }
 
     public void Start() {
@@ -1260,6 +1287,7 @@ public class VoiceManager {
         if (!isRunning) return;
         isRunning = false;
         try {
+            WriteVoiceState(false, (int)CurrentMode, 0.0f);
             if (hookId != IntPtr.Zero) {
                 UnhookWindowsHookEx(hookId);
                 hookId = IntPtr.Zero;
@@ -1280,6 +1308,27 @@ public class VoiceManager {
         } catch { }
     }
 
+    private void WriteVoiceState(bool talking, int mode, float level) {
+        if (string.IsNullOrEmpty(gameDirectory)) return;
+        try {
+            string dir = Path.Combine(gameDirectory, @"Data\Platform");
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            string file = Path.Combine(dir, "voice-state.json");
+            string tmp = file + ".tmp";
+            string json = string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                "{{\"talking\":{0},\"mode\":{1},\"level\":{2:0.000},\"t\":{3}}}",
+                talking ? "true" : "false",
+                mode,
+                level,
+                Environment.TickCount
+            );
+            File.WriteAllText(tmp, json, Encoding.UTF8);
+            if (File.Exists(file)) File.Delete(file);
+            File.Move(tmp, file);
+        } catch { }
+    }
+
     private void InitKeyboardHook() {
         keyboardProc = HookCallback;
         IntPtr hMod = GetModuleHandle(null);
@@ -1289,18 +1338,26 @@ public class VoiceManager {
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
         if (nCode >= 0) {
             int vkCode = Marshal.ReadInt32(lParam);
+            int msg = wParam.ToInt32();
             if (vkCode == VK_V) {
-                int msg = wParam.ToInt32();
                 if (msg == 0x0100 || msg == 0x0104) { // WM_KEYDOWN
                     if (!isTalking) {
                         isTalking = true;
-                        if (OnTalkStateChanged != null) OnTalkStateChanged(true);
+                        WriteVoiceState(true, (int)CurrentMode, 0.05f);
+                        if (OnTalkStateChanged != null) OnTalkStateChanged(true, CurrentMode);
                     }
                 } else if (msg == 0x0101 || msg == 0x0105) { // WM_KEYUP
                     if (isTalking) {
                         isTalking = false;
-                        if (OnTalkStateChanged != null) OnTalkStateChanged(false);
+                        WriteVoiceState(false, (int)CurrentMode, 0.0f);
+                        if (OnTalkStateChanged != null) OnTalkStateChanged(false, CurrentMode);
                     }
+                }
+            } else if (vkCode == VK_F8) {
+                if (msg == 0x0100 || msg == 0x0104) { // WM_KEYDOWN
+                    CurrentMode = (VoiceMode)(((int)CurrentMode + 1) % 3);
+                    WriteVoiceState(isTalking, (int)CurrentMode, isTalking ? 0.05f : 0.0f);
+                    if (OnVoiceModeChanged != null) OnVoiceModeChanged(CurrentMode);
                 }
             }
         }
@@ -1347,12 +1404,25 @@ public class VoiceManager {
                 byte[] audio = new byte[hdr.dwBytesRecorded];
                 Marshal.Copy(hdr.lpData, audio, 0, (int)hdr.dwBytesRecorded);
 
-                // Send Packet: [0x02, (uint32)profileId, (uint32)seq, audio...]
-                byte[] packet = new byte[9 + audio.Length];
+                // Calculate real RMS volume from 16-bit PCM audio samples
+                int sampleCount = audio.Length / 2;
+                double sumSquares = 0;
+                for (int i = 0; i < sampleCount; i++) {
+                    short s = BitConverter.ToInt16(audio, i * 2);
+                    sumSquares += (double)s * s;
+                }
+                double rms = Math.Sqrt(sumSquares / (sampleCount > 0 ? sampleCount : 1));
+                float level = (float)Math.Min(1.0, Math.Max(0.0, (rms - 150.0) / 4500.0));
+
+                WriteVoiceState(true, (int)CurrentMode, level);
+
+                // Send Packet: [0x02, (uint32)profileId, (uint32)seq, (byte)voiceMode, audio...]
+                byte[] packet = new byte[10 + audio.Length];
                 packet[0] = 0x02;
                 Array.Copy(BitConverter.GetBytes((uint)profileId), 0, packet, 1, 4);
                 Array.Copy(BitConverter.GetBytes(sequenceNumber++), 0, packet, 5, 4);
-                Array.Copy(audio, 0, packet, 9, audio.Length);
+                packet[9] = (byte)CurrentMode;
+                Array.Copy(audio, 0, packet, 10, audio.Length);
 
                 try {
                     udpClient.Send(packet, packet.Length);

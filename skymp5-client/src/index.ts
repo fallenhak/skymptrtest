@@ -33,6 +33,7 @@ import { SweetTaffyStaticPerksService } from "./services/services/sweetTaffyStat
 import { DisableSkillAdvanceService } from "./services/services/disableSkillAdvanceService";
 import { PerkSyncService } from "./services/services/perkSyncService";
 import { ChatService } from "./services/services/chatService";
+import { VoiceHudService } from "./services/services/voiceHudService";
 import { DisableFastTravelService } from "./services/services/disableFastTravelService";
 import { DisableDifficultySelectionService } from "./services/services/disableDifficultySelectionService";
 import { SweetTaffyPlayerCombatService } from "./services/services/sweetTaffyPlayerCombatService";
@@ -101,6 +102,7 @@ const main = () => {
       new DisableSkillAdvanceService(sp, controller),
       new PerkSyncService(sp, controller),
       new ChatService(sp, controller),
+      new VoiceHudService(sp, controller),
       new DisableFastTravelService(sp, controller),
       new DisableDifficultySelectionService(sp, controller),
       new WorldCleanerService(sp, controller),

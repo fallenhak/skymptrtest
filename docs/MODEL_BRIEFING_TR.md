@@ -228,3 +228,44 @@ Tüm komutlar depo kökünde (`C:\Users\kerim\Documents\ChatGPT\SkyMPTR Test`) �
 ## 9. 7 Eylül 2026 — Antigravity devam belgesi
 
 Kullanıcının isteğiyle kalan işleri Antigravity'nin tamamlaması için `docs/ANTIGRAVITY_NEXT_TR.md` eklendi. Başlangıç commit'i, dağıtım/yedek/log konumları, karakter/perk kabul testleri, ses/HUD gereksinimleri, uygulanmamış mimari öneriler ve release engelleri bir arada. Devam eden kişi önce bu belgeyi okumalı. Bu tur yalnızca dokümantasyon değişti; yeni oyun testi veya işlevsel değişiklik yapılmadı. Her çalışma sonunda bu briefing'i güncelleme kuralı devam eder.
+
+## 10. 7 Eylül 2026 — 3 Modlu Ses Sistemi, Nordic UI Göstergesi, 3D Yönlendirme ve Dağıtım Güncellemesi (Antigravity)
+
+- **Aktif Dal (Branch):** `codex/character-perks-voice`
+- **3 Ses Modu (Fısıltı / Normal / Bağırma):**
+  - `src/launcher/Program.cs`: `VoiceMode` enum tanımlandı (`Whisper = 0`, `Normal = 1`, `Shout = 2`).
+  - Global `WH_KEYBOARD_LL` kancasında `F8` (`VK_F8 = 0x77`) tuşu ile döngüsel mod geçişi sağlandı (`Fısıltı -> Normal -> Bağırma -> Fısıltı`). Launcher UI'daki mikrofon durumu modu gösterecek şekilde güncellendi.
+  - UDP 3001 ses paket başlığına mod bilgisi eklendi: `[0x02, (uint32)profileId, (uint32)seq, (byte)voiceMode, audio...]`.
+  - `scripts/gamemode.js`: Ses yönlendiricisi gelen paketten modu okuyup dinamik menzil filtresi uyguluyor:
+    - **Fısıltı:** Max 600 birim (~8 metre)
+    - **Normal:** Max 2200 birim (~30 metre)
+    - **Bağırma:** Max 5000 birim (~70 metre)
+- **Dinleyicinin Bakış Açısına Göre 3D Uzamsal Yönlendirme (R10):**
+  - `scripts/gamemode.js` içinde dinleyicinin rotasyon açısı `mp.get(listenerActor, "angle")` ile okundu.
+  - Dünya delta koordinatları (`dx`, `dy`), dinleyicinin Z eksenindeki dönüş açısına göre yerel koordinatlara dönüştürüldü ($relX_{local} = dx \cdot \cos\alpha - dy \cdot \sin\alpha$, $relY_{local} = dx \cdot \sin\alpha + dy \cdot \cos\alpha$). Dinleyici arkasını döndüğünde stereo panning'in ters kalması (R10) çözüldü.
+- **Gerçek Mikrofon Seviyesi ve Nordic UI Oyun İçi HUD:**
+  - `src/launcher/Program.cs`: `OnWaveIn` içinde 16-bit Mono PCM ses örneklerinden anlık RMS genlik hesabı yapıldı (`0.0` - `1.0` normalize).
+  - Durum köprüsü olarak `Data/Platform/voice-state.json` dosyasına atomik (`.tmp` -> rename) durum yazıldı.
+  - `skymp5-client/src/services/services/voiceHudService.ts`: CEF tarayıcısına minimal Nordic UI stiline sahip gösterge enjekte edildi.
+    - Koyu yarı saydam taş zemin (`rgba(12, 16, 20, 0.82)`), altın/kemik rünik köşeler, `Cinzel` tipografi.
+    - Parlayan SVG mikrofon ikonu.
+    - Mod rozetleri: Fısıltı (Buz mavisi `#90caf9`), Normal (Kemik beyazı `#e2ded4`), Bağırma (İskandinav kehribar/kızıl `#ff8a65`).
+    - Gerçek mikrofon seviyesine göre dinamik olarak yükselip alçalan 5 dikey ses şiddet sütunu (sahte/rastgele animasyon değil).
+    - V tuşuna basıldığında pürüzsüzce açılma (fade-in), bırakıldığında yumuşak kapanma. F8 ile mod değiştirildiğinde oyuncuyu bilgilendirmek için 2.2 saniye ekranda gösterilip gizlenme.
+  - `skymp5-client/src/index.ts`: `VoiceHudService` kaydedildi.
+- **Launcher Güncelleme ve Paketleme Düzeltmeleri (R2, R3, R8):**
+  - `src/launcher/Program.cs`: `ApplyModpackUpdateAsync` içinde Zip Slip dizin aşımı (`..`) engellendi (`Path.GetFullPath` doğrulaması).
+  - Mod güncellemesinde aynı boyuttaki değişmiş dosyaların atlanması (R2) engellendi; modpack dosyaları hedef üzerine güncelleniyor.
+  - `scripts/build-launcher.ps1`: Line 153'teki `Copy-Item -LiteralPath ... '*'` hatası `Get-ChildItem` ile düzeltildi (R8). CSC ile derleme başarılı, `SkyMPTR-StockGame-Installer.zip` (195.96 MB) ve `dist/SkyMPTR-Launcher` ikilileri üretildi.
+- **Doğrulama ve Dağıtım:**
+  - `skymp5-client` webpack derlemesi hatasız geçti (`1.39 MiB`).
+  - `skymp5-server` TypeScript/esbuild derlemesi hatasız geçti (`3.0 MiB`).
+  - 20 adet Node davranış ve manifest testi başarıyla geçti.
+  - `scripts/deploy-lab-code.ps1` ile kodlar test lab ortamına (`.local/code-backups/20260907-190437-560`) dağıtıldı.
+  - `node scripts/test-local-server.mjs` duman testi ile yerel sunucu ve beş-master manifesti başarıyla doğrulandı.
+  - `scripts/sync-server-modpack.ps1` ile sunucu HTTP mod paketi v6 olarak (169.38 MB, 314 dosya) güncellendi.
+- **Sonraki Somut Adım:** Kullanıcının lab ortamında (`start-game-lab.ps1`) oyuna girerek:
+  1) İlk girişte RaceMenu'nün sorunsuz açıldığını, karakter kaydedildikten sonra tekrar girişte menünün açılmadığını kontrol etmesi.
+  2) Demircilik/Simya/Efsunlama ağaçlarındaki 3 perk puanı ile Çelik Demirciliği seçimini ve menüden çıkınca 2 puan kaldığını doğrulaması.
+  3) V tuşuna basarak sol alttaki Nordic UI ses göstergesini, konuşurken barların gerçek ses seviyesine göre hareketini ve F8 ile 3 mod geçişini doğrulaması.
+

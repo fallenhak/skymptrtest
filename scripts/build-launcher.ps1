@@ -150,7 +150,7 @@ if (Test-Path -LiteralPath $finalZip) { Remove-Item -LiteralPath $finalZip -Forc
 
 $standaloneDir = Join-Path $projectRoot 'dist/SkyMPTR-Launcher'
 if (-not (Test-Path -LiteralPath $standaloneDir)) { New-Item -ItemType Directory -Path $standaloneDir -Force | Out-Null }
-Copy-Item -LiteralPath (Join-Path $buildDir '*') -Destination $standaloneDir -Recurse -Force
+Get-ChildItem -LiteralPath $buildDir | Copy-Item -Destination $standaloneDir -Recurse -Force
 
 Remove-Item -LiteralPath $buildDir -Recurse -Force
 
