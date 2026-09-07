@@ -3,8 +3,11 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -44,6 +47,10 @@ public class LauncherWindow {
     private Button btnBrowseSource;
     private Button btnBrowseDest;
     private Button btnReinstall;
+    private CheckBox chkEnableVoice;
+    private TextBlock lblMicState;
+    private TextBlock lblVoiceStatus;
+    private VoiceManager voiceManager;
 
     private bool isInstalling = false;
     private bool updateRequired = false;
@@ -205,6 +212,30 @@ public class LauncherWindow {
                         </Grid>
                     </StackPanel>
                 </Border>
+
+                <!-- 4. Kart: 3D Yakinlik Sesli Sohbet (Voice Chat) -->
+                <Border Background='#131520' BorderBrush='#25293d' BorderThickness='1' CornerRadius='8' Padding='16' Margin='0,0,0,12'>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width='*'/>
+                            <ColumnDefinition Width='Auto'/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column='0'>
+                            <TextBlock Text='4. 3 Boyutlu Yakinlik Sesli Sohbet (Proximity Voice Chat)' FontSize='14' FontWeight='SemiBold' Foreground='#d4af37' Margin='0,0,0,4'/>
+                            <TextBlock Text='Oyun acikken [V] tusuna basili tutarak konusabilirsiniz. Ses yakindaki oyunculara 3D uzamsal olarak iletilir.' FontSize='11' Foreground='#8d93a8' Margin='0,0,0,8'/>
+                            <StackPanel Orientation='Horizontal'>
+                                <CheckBox x:Name='chkEnableVoice' Content='Sesli Sohbeti Etkinlestir' Foreground='#ffffff' IsChecked='True' VerticalAlignment='Center' Margin='0,0,16,0'/>
+                                <TextBlock x:Name='lblVoiceStatus' Text='[PTT: V Tusu]' FontSize='11' Foreground='#2ecc71' VerticalAlignment='Center'/>
+                            </StackPanel>
+                        </StackPanel>
+                        <Border Grid.Column='1' Background='#161924' BorderBrush='#2d3247' BorderThickness='1' CornerRadius='6' Padding='16,8' VerticalAlignment='Center'>
+                            <StackPanel HorizontalAlignment='Center'>
+                                <TextBlock Text='Mikrofon' FontSize='10' Foreground='#8d93a8' HorizontalAlignment='Center'/>
+                                <TextBlock x:Name='lblMicState' Text='Hazir' FontSize='12' FontWeight='Bold' Foreground='#2ecc71' HorizontalAlignment='Center' Margin='0,2,0,0'/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 
@@ -249,6 +280,16 @@ public class LauncherWindow {
         btnBrowseSource = (Button)window.FindName("btnBrowseSource");
         btnBrowseDest = (Button)window.FindName("btnBrowseDest");
         btnReinstall = (Button)window.FindName("btnReinstall");
+        chkEnableVoice = (CheckBox)window.FindName("chkEnableVoice");
+        lblMicState = (TextBlock)window.FindName("lblMicState");
+        lblVoiceStatus = (TextBlock)window.FindName("lblVoiceStatus");
+
+        window.Closed += (s, e) => {
+            if (voiceManager != null) {
+                voiceManager.Stop();
+                voiceManager = null;
+            }
+        };
 
         btnBrowseSource.Click += (s, e) => BrowseSourceDirectory();
         btnBrowseDest.Click += (s, e) => BrowseDestDirectory();
@@ -810,7 +851,35 @@ public class LauncherWindow {
         psi.WorkingDirectory = dest;
         Process.Start(psi);
 
-        lblStatusText.Text = "Skyrim SE calisiyor. Keyifli oyunlar!";
+        // Sesli Sohbet Baslat
+        if (chkEnableVoice != null && chkEnableVoice.IsChecked == true) {
+            try {
+                if (voiceManager != null) {
+                    voiceManager.Stop();
+                }
+                string srvIp = txtServerIp.Text.Trim();
+                if (srvIp == "127.0.0.1" || srvIp.Equals("localhost", StringComparison.OrdinalIgnoreCase)) {
+                    srvIp = "127.0.0.1";
+                }
+                voiceManager = new VoiceManager(srvIp, 3001, assignedProfileId);
+                voiceManager.OnTalkStateChanged = (talking) => {
+                    window.Dispatcher.Invoke(new Action(() => {
+                        if (talking) {
+                            lblMicState.Text = "Konusuluyor...";
+                            lblMicState.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
+                        } else {
+                            lblMicState.Text = "Hazir";
+                            lblMicState.Foreground = new SolidColorBrush(Color.FromRgb(141, 147, 168));
+                        }
+                    }));
+                };
+                voiceManager.Start();
+            } catch (Exception ex) {
+                Console.WriteLine("VoiceManager start hatasi: " + ex.Message);
+            }
+        }
+
+        lblStatusText.Text = "Skyrim SE calisiyor. Keyifli oyunlar! [V tusu ile konusabilirsiniz]";
     }
 
     private void UpdateProgress(int percent, string message) {
@@ -855,6 +924,324 @@ public class LauncherWindow {
         foreach (string dir in Directory.GetDirectories(sourceDir)) {
             string dest = Path.Combine(targetDir, Path.GetFileName(dir));
             CopyDirectoryRecursive(dir, dest);
+        }
+    }
+}
+
+public class VoiceManager {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WAVEFORMATEX {
+        public ushort wFormatTag;
+        public ushort nChannels;
+        public uint nSamplesPerSec;
+        public uint nAvgBytesPerSec;
+        public ushort nBlockAlign;
+        public ushort wBitsPerSample;
+        public ushort cbSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WAVEHDR {
+        public IntPtr lpData;
+        public uint dwBufferLength;
+        public uint dwBytesRecorded;
+        public IntPtr dwUser;
+        public uint dwFlags;
+        public uint dwLoops;
+        public IntPtr lpNext;
+        public IntPtr reserved;
+    }
+
+    public delegate void WaveInCallback(IntPtr hwi, uint uMsg, IntPtr dwInstance, IntPtr dwParam1, IntPtr dwParam2);
+    public delegate void WaveOutCallback(IntPtr hwo, uint uMsg, IntPtr dwInstance, IntPtr dwParam1, IntPtr dwParam2);
+    public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("winmm.dll")]
+    public static extern int waveInOpen(out IntPtr phwi, int uDeviceID, ref WAVEFORMATEX lpFormat, WaveInCallback dwCallback, IntPtr dwInstance, int fdwOpen);
+    [DllImport("winmm.dll")]
+    public static extern int waveInPrepareHeader(IntPtr hwi, IntPtr pwh, int cbwh);
+    [DllImport("winmm.dll")]
+    public static extern int waveInAddBuffer(IntPtr hwi, IntPtr pwh, int cbwh);
+    [DllImport("winmm.dll")]
+    public static extern int waveInStart(IntPtr hwi);
+    [DllImport("winmm.dll")]
+    public static extern int waveInStop(IntPtr hwi);
+    [DllImport("winmm.dll")]
+    public static extern int waveInClose(IntPtr hwi);
+
+    [DllImport("winmm.dll")]
+    public static extern int waveOutOpen(out IntPtr phwo, int uDeviceID, ref WAVEFORMATEX lpFormat, WaveOutCallback dwCallback, IntPtr dwInstance, int fdwOpen);
+    [DllImport("winmm.dll")]
+    public static extern int waveOutPrepareHeader(IntPtr hwo, IntPtr pwh, int cbwh);
+    [DllImport("winmm.dll")]
+    public static extern int waveOutWrite(IntPtr hwo, IntPtr pwh, int cbwh);
+    [DllImport("winmm.dll")]
+    public static extern int waveOutClose(IntPtr hwo);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+    [DllImport("user32.dll")]
+    public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    private const int WH_KEYBOARD_LL = 13;
+    private const int VK_V = 0x56;
+    private const int CALLBACK_FUNCTION = 0x00030000;
+    private const uint WIM_DATA = 0x3C0;
+    private const uint WOM_DONE = 0x3BD;
+
+    private string serverIp;
+    private int serverPort;
+    private int profileId;
+    private bool isRunning;
+    private bool isTalking;
+    private uint sequenceNumber;
+
+    private IntPtr hWaveIn = IntPtr.Zero;
+    private IntPtr hWaveOut = IntPtr.Zero;
+    private IntPtr hookId = IntPtr.Zero;
+    private LowLevelKeyboardProc keyboardProc;
+    private WaveInCallback waveInCb;
+    private WaveOutCallback waveOutCb;
+    private UdpClient udpClient;
+    private Thread receiveThread;
+    private Thread heartbeatThread;
+
+    public Action<bool> OnTalkStateChanged;
+
+    public VoiceManager(string serverIp, int serverPort, int profileId) {
+        this.serverIp = serverIp;
+        this.serverPort = serverPort;
+        this.profileId = profileId;
+    }
+
+    public void Start() {
+        if (isRunning) return;
+        isRunning = true;
+        try {
+            udpClient = new UdpClient();
+            udpClient.Connect(serverIp, serverPort);
+
+            InitAudioPlayback();
+            InitAudioRecording();
+            InitKeyboardHook();
+
+            receiveThread = new Thread(ReceiveLoop);
+            receiveThread.IsBackground = true;
+            receiveThread.Start();
+
+            heartbeatThread = new Thread(HeartbeatLoop);
+            heartbeatThread.IsBackground = true;
+            heartbeatThread.Start();
+        } catch (Exception ex) {
+            Console.WriteLine("VoiceManager start error: " + ex.Message);
+        }
+    }
+
+    public void Stop() {
+        if (!isRunning) return;
+        isRunning = false;
+        try {
+            if (hookId != IntPtr.Zero) {
+                UnhookWindowsHookEx(hookId);
+                hookId = IntPtr.Zero;
+            }
+            if (hWaveIn != IntPtr.Zero) {
+                waveInStop(hWaveIn);
+                waveInClose(hWaveIn);
+                hWaveIn = IntPtr.Zero;
+            }
+            if (hWaveOut != IntPtr.Zero) {
+                waveOutClose(hWaveOut);
+                hWaveOut = IntPtr.Zero;
+            }
+            if (udpClient != null) {
+                udpClient.Close();
+                udpClient = null;
+            }
+        } catch { }
+    }
+
+    private void InitKeyboardHook() {
+        keyboardProc = HookCallback;
+        IntPtr hMod = GetModuleHandle(null);
+        hookId = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardProc, hMod, 0);
+    }
+
+    private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
+        if (nCode >= 0) {
+            int vkCode = Marshal.ReadInt32(lParam);
+            if (vkCode == VK_V) {
+                int msg = wParam.ToInt32();
+                if (msg == 0x0100 || msg == 0x0104) { // WM_KEYDOWN
+                    if (!isTalking) {
+                        isTalking = true;
+                        if (OnTalkStateChanged != null) OnTalkStateChanged(true);
+                    }
+                } else if (msg == 0x0101 || msg == 0x0105) { // WM_KEYUP
+                    if (isTalking) {
+                        isTalking = false;
+                        if (OnTalkStateChanged != null) OnTalkStateChanged(false);
+                    }
+                }
+            }
+        }
+        return CallNextHookEx(hookId, nCode, wParam, lParam);
+    }
+
+    private void InitAudioRecording() {
+        WAVEFORMATEX fmt = new WAVEFORMATEX();
+        fmt.wFormatTag = 1; // PCM
+        fmt.nChannels = 1;   // Mono
+        fmt.nSamplesPerSec = 16000;
+        fmt.wBitsPerSample = 16;
+        fmt.nBlockAlign = (ushort)(fmt.nChannels * fmt.wBitsPerSample / 8);
+        fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
+        fmt.cbSize = 0;
+
+        waveInCb = OnWaveIn;
+        int res = waveInOpen(out hWaveIn, -1, ref fmt, waveInCb, IntPtr.Zero, CALLBACK_FUNCTION);
+        if (res != 0 || hWaveIn == IntPtr.Zero) return;
+
+        // Allocate 2 buffers of 2560 bytes (80 ms chunk)
+        for (int i = 0; i < 2; i++) {
+            AllocateAndAddInputBuffer(2560);
+        }
+        waveInStart(hWaveIn);
+    }
+
+    private void AllocateAndAddInputBuffer(int size) {
+        IntPtr bufferPtr = Marshal.AllocHGlobal(size);
+        WAVEHDR hdr = new WAVEHDR();
+        hdr.lpData = bufferPtr;
+        hdr.dwBufferLength = (uint)size;
+        IntPtr hdrPtr = Marshal.AllocHGlobal(Marshal.SizeOf(hdr));
+        Marshal.StructureToPtr(hdr, hdrPtr, false);
+        waveInPrepareHeader(hWaveIn, hdrPtr, Marshal.SizeOf(hdr));
+        waveInAddBuffer(hWaveIn, hdrPtr, Marshal.SizeOf(hdr));
+    }
+
+    private void OnWaveIn(IntPtr hwi, uint uMsg, IntPtr dwInstance, IntPtr dwParam1, IntPtr dwParam2) {
+        if (uMsg == WIM_DATA && isRunning) {
+            IntPtr hdrPtr = dwParam1;
+            WAVEHDR hdr = (WAVEHDR)Marshal.PtrToStructure(hdrPtr, typeof(WAVEHDR));
+            if (hdr.dwBytesRecorded > 0 && isTalking && udpClient != null) {
+                byte[] audio = new byte[hdr.dwBytesRecorded];
+                Marshal.Copy(hdr.lpData, audio, 0, (int)hdr.dwBytesRecorded);
+
+                // Send Packet: [0x02, (uint32)profileId, (uint32)seq, audio...]
+                byte[] packet = new byte[9 + audio.Length];
+                packet[0] = 0x02;
+                Array.Copy(BitConverter.GetBytes((uint)profileId), 0, packet, 1, 4);
+                Array.Copy(BitConverter.GetBytes(sequenceNumber++), 0, packet, 5, 4);
+                Array.Copy(audio, 0, packet, 9, audio.Length);
+
+                try {
+                    udpClient.Send(packet, packet.Length);
+                } catch { }
+            }
+            if (hWaveIn != IntPtr.Zero && isRunning) {
+                waveInAddBuffer(hWaveIn, hdrPtr, Marshal.SizeOf(typeof(WAVEHDR)));
+            }
+        }
+    }
+
+    private void InitAudioPlayback() {
+        WAVEFORMATEX fmt = new WAVEFORMATEX();
+        fmt.wFormatTag = 1; // PCM
+        fmt.nChannels = 2;   // Stereo (for 3D spatial panning)
+        fmt.nSamplesPerSec = 16000;
+        fmt.wBitsPerSample = 16;
+        fmt.nBlockAlign = (ushort)(fmt.nChannels * fmt.wBitsPerSample / 8);
+        fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
+        fmt.cbSize = 0;
+
+        waveOutCb = OnWaveOut;
+        waveOutOpen(out hWaveOut, -1, ref fmt, waveOutCb, IntPtr.Zero, CALLBACK_FUNCTION);
+    }
+
+    private void OnWaveOut(IntPtr hwo, uint uMsg, IntPtr dwInstance, IntPtr dwParam1, IntPtr dwParam2) {
+        if (uMsg == WOM_DONE) {
+            IntPtr hdrPtr = dwParam1;
+            if (hdrPtr != IntPtr.Zero) {
+                WAVEHDR hdr = (WAVEHDR)Marshal.PtrToStructure(hdrPtr, typeof(WAVEHDR));
+                if (hdr.lpData != IntPtr.Zero) Marshal.FreeHGlobal(hdr.lpData);
+                Marshal.FreeHGlobal(hdrPtr);
+            }
+        }
+    }
+
+    private void ReceiveLoop() {
+        IPEndPoint remoteEp = new IPEndPoint(IPAddress.Any, 0);
+        while (isRunning && udpClient != null) {
+            try {
+                byte[] packet = udpClient.Receive(ref remoteEp);
+                if (packet == null || packet.Length < 17) continue;
+
+                if (packet[0] == 0x03 && hWaveOut != IntPtr.Zero) { // Spatial Voice Packet
+                    float dist = BitConverter.ToSingle(packet, 5);
+                    float relX = BitConverter.ToSingle(packet, 9);
+                    float relY = BitConverter.ToSingle(packet, 13);
+
+                    if (dist > 2200.0f) continue;
+
+                    float vol = 1.0f;
+                    if (dist > 400.0f) vol = Math.Max(0.0f, (2200.0f - dist) / 1800.0f);
+
+                    float pan = 0.0f;
+                    if (Math.Abs(relX) > 0.1f || Math.Abs(relY) > 0.1f) {
+                        pan = (float)Math.Sin(Math.Atan2(relX, relY));
+                        if (pan < -0.85f) pan = -0.85f;
+                        if (pan > 0.85f) pan = 0.85f;
+                    }
+
+                    float leftMult = vol * Math.Min(1.0f, 1.0f - pan);
+                    float rightMult = vol * Math.Min(1.0f, 1.0f + pan);
+
+                    int monoSamples = (packet.Length - 17) / 2;
+                    int stereoBytesCount = monoSamples * 4;
+                    byte[] stereoData = new byte[stereoBytesCount];
+
+                    for (int i = 0; i < monoSamples; i++) {
+                        short monoSample = BitConverter.ToInt16(packet, 17 + i * 2);
+                        short leftSample = (short)(monoSample * leftMult);
+                        short rightSample = (short)(monoSample * rightMult);
+
+                        stereoData[i * 4] = (byte)(leftSample & 0xFF);
+                        stereoData[i * 4 + 1] = (byte)((leftSample >> 8) & 0xFF);
+                        stereoData[i * 4 + 2] = (byte)(rightSample & 0xFF);
+                        stereoData[i * 4 + 3] = (byte)((rightSample >> 8) & 0xFF);
+                    }
+
+                    IntPtr pData = Marshal.AllocHGlobal(stereoBytesCount);
+                    Marshal.Copy(stereoData, 0, pData, stereoBytesCount);
+
+                    WAVEHDR hdr = new WAVEHDR();
+                    hdr.lpData = pData;
+                    hdr.dwBufferLength = (uint)stereoBytesCount;
+
+                    IntPtr hdrPtr = Marshal.AllocHGlobal(Marshal.SizeOf(hdr));
+                    Marshal.StructureToPtr(hdr, hdrPtr, false);
+
+                    waveOutPrepareHeader(hWaveOut, hdrPtr, Marshal.SizeOf(hdr));
+                    waveOutWrite(hWaveOut, hdrPtr, Marshal.SizeOf(hdr));
+                }
+            } catch { }
+        }
+    }
+
+    private void HeartbeatLoop() {
+        while (isRunning && udpClient != null) {
+            try {
+                byte[] hb = new byte[5];
+                hb[0] = 0x01;
+                Array.Copy(BitConverter.GetBytes((uint)profileId), 0, hb, 1, 4);
+                udpClient.Send(hb, hb.Length);
+            } catch { }
+            Thread.Sleep(3000);
         }
     }
 }

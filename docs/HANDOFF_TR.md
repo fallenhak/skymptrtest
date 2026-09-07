@@ -207,6 +207,45 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
   - Oyuna girişte sunucudan gelen `syncPerks` ile oyuncunun tüm perkleri ve puanı otomatik yüklenir.
 - **Mod Dağıtımı:** Mod paketi v4 olarak paketlendi (`modpack.zip`), dağıtım arşivi `dist/SkyMPTR-StockGame-Installer.zip` güncellendi.
 
+## 16. Oyun İçi Zengin Metin Sohbeti (Text Chat) ve 3 Boyutlu Yakınlık Sesli Sohbet (Proximity Voice Chat) — 7 Eylül
+
+- **Oyun İçi Metin Sohbeti & Rol Yapma (RP) Komutları (`skymp5-client` & `skymp5-front`):**
+  - Upstream `skymp5-front` içerisinde yer alan zengin React Chat bileşeni, `skymp5-client` altına yazılan `ChatService` ile oyuna bağlandı.
+  - `Enter` tuşuna basıldığında sohbet kutusu otomatik odaklanarak açılır; mesaj gönderildiğinde veya `Escape` tuşuna basıldığında kutu kapanıp karakter kontrolü oyuna geri döner.
+  - `badMenus` (envanter, harita, sandık, yetenek menüsü vs.) açıkken `Enter` tuşunun arayüzü engellemesi önlendi.
+  - **Sunucu Tarafı Rol Komutları ve Yakınlık Filtresi (`gamemode.js`):**
+    - **Normal Konuşma:** 2200 birim (~25m) çevreye sarı isim ve beyaz metinle iletilir.
+    - **Mesafe Opaklığı (Distance Opacity):** Konuşmacıdan uzaklaştıkça metin şeffaflaşır. Farklı hücrelerde (interior/exterior) olanlar birbirini duyamaz.
+    - `/me <eylem>`: Karakterin fiziksel eylemini leylak/mor renkte gösterir (* Ahmet demirci çekicini kaldırır *).
+    - `/do <durum>`: Çevresel durumu açık mavi renkte betimler (* Tezgahta yeni dövülmüş çelik hançerler vardır (Ahmet) *).
+    - `/b <mesaj>` veya `/ooc <mesaj>`: Rol dışı konuşmaları gri renkte çift parantezle gösterir ((( Ahmet: selamlar ))).
+    - `/s <mesaj>`: Bağırma komutu (5000 birim menzil, turuncu renk).
+    - `/w <mesaj>`: Fısıltı komutu (600 birim dar menzil, yumuşak mavi renk).
+    - `/zar [max]`: 1-100 veya istenen değerde hilesiz zar atma (yeşil renkte zar ikonu).
+    - `/g <mesaj>`: Sunucudaki tüm oyuncuların duyduğu genel küresel sohbet (altın sarısı renk).
+    - `/isim <ad>`: Karakterin rol adını kalıcı olarak belirler (`data/players/{profileId}.json` içine kaydedilir).
+    - `/yardim`: Oyuncuya özel komut rehberi mesajı.
+
+- **3 Boyutlu Yakınlık Tabanlı Sesli Sohbet (Proximity 3D Voice Chat):**
+  - CEF tarayıcısının penceresiz moddaki mikrofon kısıtlamalarına ve olası çökmelere takılmamak için, modern FiveM/GTA RP altyapılarında olduğu gibi doğrudan **WPF Başlatıcı (`SkyMPTR-Launcher.exe`) arkasında çalışan hafif `VoiceManager` ses motoru** geliştirildi.
+  - **Düşük Gecikmeli UDP Voice Relay (`gamemode.js`):**
+    - Sunucu üzerinde Node.js `dgram` modülü ile UDP 3001 portunda hafif bir ses yönlendiricisi açıldı.
+    - Konuşan oyuncunun koordinatları (`mp.getActorPos`) ve hücresi (`mp.getActorCellOrWorld`) ile dinleyici oyuncuların konumu karşılaştırılır.
+    - Ses yalnızca aynı hücrede ve 2200 birim (~25-30 metre) menzilde olan oyunculara iletilir.
+  - **Donanım ve Uzamsal 3D Stereo Ses (`Program.cs` - `winmm.dll`):**
+    - Harici hiçbir bağımlılık gerektirmeden Windows'un yerel `winmm.dll` multimedya API'si (P/Invoke) kullanılarak 16.000 Hz 16-bit Mono mikrofon yakalama ve 16-bit Stereo hoparlör çıkışı sağlandı.
+    - **Push-to-Talk (PTT):** Düşük seviyeli global klavye kancası (`SetWindowsHookEx(WH_KEYBOARD_LL)`) ile Skyrim tam ekranda ve odakta olsa dahi `V` tuşuna basılı tutulduğunda mikrofon anında devreye girer. Launcher arayüzünde canlı mikrofon rozeti `Konuşuluyor...` olarak yanar.
+    - **3D Uzamsal Panning ve Mesafe Azalması:**
+      - İki oyuncu arasındaki 3D mesafe arttıkça ses doğal olarak kısılır (400 birimden sonra başlar, 2200 birimde tamamen kesilir).
+      - Konuşan kişinin dinleyiciye göre bağıl açısı (`relX, relY`) hesaplanarak ses stereo hoparlörlere yönlendirilir: Konuşmacı soldaysa sol kulaklıktan, sağdaysa sağ kulaklıktan duyulur.
+  - **Başlatıcı Arayüzü:** Başlatıcıya `4. 3 Boyutlu Yakınlık Sesli Sohbet` kartı eklendi; istenirse tek tıkla sesli sohbet kapatılabilir veya aktif tutulabilir.
+
+- **Dağıtım ve Eşitleme:**
+  - `skymp5-client.js` yeniden derlendi ve MO2 `05_SkyMP_Client` içine kopyalandı.
+  - `dist/SkyMPTR-Launcher/SkyMPTR-Launcher.exe` ve `dist/SkyMPTR-StockGame-Installer.zip` yeniden üretildi.
+  - Sunucu mod paketi `v5` sürümüne güncellendi.
+
+
 
 
 
