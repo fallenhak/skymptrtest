@@ -93,6 +93,10 @@ if (Test-Path -LiteralPath $skyrimSoulsArchive) {
     $mod4 = Join-Path $modsRoot '04_Skyrim_Souls_RE'
     New-Item -ItemType Directory -Path $mod4 -Force | Out-Null
     tar -xf $skyrimSoulsArchive -C $mod4
+    $soulsIni = Join-Path $mod4 'SKSE/Plugins/SkyrimSoulsRE.ini'
+    if (Test-Path -LiteralPath $soulsIni) {
+        (Get-Content -LiteralPath $soulsIni -Raw).Replace('bHideEngineFixesWarning = false', 'bHideEngineFixesWarning = true') | Set-Content -LiteralPath $soulsIni -NoNewline
+    }
 }
 
 # 05_SkyMP_Client
