@@ -150,15 +150,25 @@ SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisans
   6. `06_Engine_Fixes`: v7.0.20 (oyun motoru düzeltmeleri ve d3dx9_42.dll preloader)
 - `prepare-game-lab.ps1` ve `check-client-prerequisites.ps1` modüler yapıya göre güncellendi; `sources.lock.json` içine yeni mod arşivleri ve SHA-256 değerleri işlendi. Profil testi ve ön koşul kontrolü başarıyla geçti.
 
-## 12. Çok oyunculu test ve istemci dağıtım paketi (Radmin VPN / LAN) — 7 Eylül
+## 13. Görsel Başlatıcı (Launcher), Stock Game İzolasyonu ve Otomatik Downgrade — 7 Eylül
 
-- **Tek Makinede İki İstemci Sınırı:** MO2'nin USVFS sanal dosya sistemi tek bir paylaşımlı bellek (`mod_organizer_instance_1`) kullanır. Aynı makinede ikinci bir istemci başlatıldığında ilk istemcinin sanal dosya bağlantıları kopar ve Steam tekil oturum denetimi nedeniyle ilk oyun kapanır.
-- **Arkadaşla Test Çözümü (Sıfır Port Açma):**
-  - SkyMP sunucusu TCP (3000) ve UDP (7777) portlarını kullanır. Modem üzerinde port yönlendirme (port forwarding) gereksinimini ortadan kaldırmak için **Radmin VPN** (veya Tailscale) sanal LAN çözümü benimsendi.
-  - Sunucu yapılandırmasında (`server-settings.json` ve `prepare-local-server.ps1`) `uiListenHost: "0.0.0.0"` ve `maxPlayers: 4` olarak güncellendi.
-- **İstemci Paketleyici (`scripts/package-client-release.ps1`):**
-  - SKSE 2.2.8, Address Library 13, SSE Display Tweaks, Skyrim Souls RE, SSE Engine Fixes, SkyMP Platform/UI bileşenlerini ve tek tıkla çalıştırılan `Sunucuya_Baglan.bat` başlatıcısını içeren taşınabilir bir zip paketi (`dist/SkyMPTR-Client-Pack.zip`) üreten betik eklendi.
-  - Arkadaş tarafında yalnızca temiz Skyrim SE 1.6.1170 kurulu olması yeterlidir; arşiv açılıp başlatıcıya tıklandığında sunucu IP ve profil numarası girilerek doğrudan oyuna girilebilir.
+- **Bağımsız Masaüstü Başlatıcısı (`src/launcher/Program.cs`):**
+  - Windows'un yerleşik C# derleyicisi (`csc.exe`) ve WPF motoruyla harici hiçbir çalışma zamanı (Node, Python vb.) gerektirmeyen bağımsız `SkyMPTR-Launcher.exe` geliştirildi.
+  - Koyu Nordic/Skyrim teması, altın/kehribar vurgulu görsel arayüz, durum rozetleri ve canlı ilerleme çubuğu içerir.
+- **Stock Game İzolasyon Mekanizması:**
+  - Kullanıcının orijinal Steam Skyrim dizinini otomatik tespit eder (`Steam App 489830` registry veya standart kütüphane yolları).
+  - Orijinal Steam oyununa dokunmadan sadece 5 ana ESM (`Skyrim.esm`, `Update.esm`, `Dawnguard.esm`, `HearthFires.esm`, `Dragonborn.esm`) ve temel BSA dosyalarını belirlenen hedef klasöre (`C:\SkyMPTR`) kopyalar.
+- **Akıllı Downgrade Motoru:**
+  - Kullanıcının `SkyrimSE.exe` sürümünü okur:
+    - Sürüm zaten `1.6.1170.0` ise: Orijinal çalıştırıcı doğrudan kopyalanır.
+    - Sürüm farklıysa (örn: Steam'in en son `1.6.1179` veya `1.7.x` sürümü): Paket içerisindeki sabitlenmiş `1.6.1170.0` ikililerini yerleştirerek oyunu otomatik olarak uyumlu sürüme düşürür (downgrade).
+- **Tek Tıkla Mod & Güncelleme Kurulumu:**
+  - SKSE 2.2.8, Address Library 13, SSE Display Tweaks (1280x720 borderless), Skyrim Souls RE, SSE Engine Fixes (v7.0.20 + preloader) ve SkyMP Client bileşenlerini Stock Game klasörüne açar.
+  - Kullanıcının arayüzden girdiği IP (Radmin/LAN) ve Profil No bilgilerini `skymp5-client-settings.txt` içine yazar.
+  - "OYUNA BAŞLA" butonu ile doğrudan `skse64_loader.exe`'yi başlatır.
+- **Paketleme Otomasyonu (`scripts/build-launcher.ps1`):**
+  - `dist/SkyMPTR-StockGame-Installer.zip` arşivini üretir. Arşiv içerisinde `SkyMPTR-Launcher.exe`, `SkyMPTR-Data.zip` ve `BENI_OKU.txt` hazır yer alır.
+
 
 
 
