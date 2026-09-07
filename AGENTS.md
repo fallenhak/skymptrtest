@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is the shared SkyMP TR development repository. SkyMP source and upstream history are tracked here. Read `docs/HANDOFF_TR.md` for status and `docs/TEAM_WORKFLOW_TR.md` for collaboration. Documentation is Turkish. `sources.lock.json` records the upstream baseline, Custom Skills Framework version, and native artifact provenance. `.research` contains caches; `.local` contains machine settings, staged clients and saves. Both are ignored.
+This is the shared SkyMP TR development repository. SkyMP source and upstream history are tracked here. Read `docs/MODEL_BRIEFING_TR.md` for latest architecture & inter-model briefing, `docs/HANDOFF_TR.md` for detailed historical status, and `docs/TEAM_WORKFLOW_TR.md` for collaboration. Documentation is Turkish. `sources.lock.json` records the upstream baseline, Custom Skills Framework version, and native artifact provenance. `.research` contains caches; `.local` contains machine settings, staged clients and saves. Both are ignored.
 
 Edit `skymp5-client` for TypeScript client behavior, `skymp5-server` for native/server state and `skyrim-platform` for game integration. Native CMake builds use this repository's `build` directory; follow upstream `CONTRIBUTING.md` and `CLAUDE.md`. No root npm package exists. Keep upstream license files and history intact.
 
