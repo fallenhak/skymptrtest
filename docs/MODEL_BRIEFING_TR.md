@@ -224,3 +224,7 @@ Tüm komutlar depo kökünde (`C:\Users\kerim\Documents\ChatGPT\SkyMPTR Test`) �
 - Doğrulama: istemci webpack, sunucu TypeScript/esbuild başarılı; 6 yeni davranış testi + 14 manifest testi başarılı. Yerel native sunucu başlangıcı ve beş-master manifest smoke testi geçti. Bunlar iki oyuncu, oyun menüsü veya üretim etkisi doğrulaması değildir. CI'a sunucu tip denetimi ve yeni testler eklendi.
 - Kullanıcının diğer gereksinimleri halen açık: fısıltı/normal/bağırma, gerçek mikrofon seviyesine tepki veren oyun içi gösterge, Skyrim/Nordic tarzı UI. Bunlar bu test paketinde uygulanmadı. Ses oturum kimliği ve yakınlık kontrolüyle birlikte ele alınmalı; eski ses protokolünün güvenliği çözülmüş sayılmamalı.
 - Sonraki somut adım: kullanıcı lab girişinde karakter menüsünü ve üç ağaçtaki puan/seviye/seçim kalıcılığını kontrol ederken ses/HUD uygulamasına devam etmek. Faalgrin'in açık oyun sürecine dokunulmadı.
+
+## 9. 7 Eylül 2026 — Antigravity devam belgesi
+
+Kullanıcının isteğiyle kalan işleri Antigravity'nin tamamlaması için `docs/ANTIGRAVITY_NEXT_TR.md` eklendi. Başlangıç commit'i, dağıtım/yedek/log konumları, karakter/perk kabul testleri, ses/HUD gereksinimleri, uygulanmamış mimari öneriler ve release engelleri bir arada. Devam eden kişi önce bu belgeyi okumalı. Bu tur yalnızca dokümantasyon değişti; yeni oyun testi veya işlevsel değişiklik yapılmadı. Her çalışma sonunda bu briefing'i güncelleme kuralı devam eder.
