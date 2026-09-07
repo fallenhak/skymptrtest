@@ -68,6 +68,7 @@ Copy-Item -LiteralPath (Join-Path $skseRoot 'Data') -Destination $gameRoot -Recu
 Copy-Item -LiteralPath (Join-Path $clientRoot 'Data') -Destination $gameRoot -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $labRoot 'extracted/address-library/SKSE') -Destination (Join-Path $gameRoot 'Data') -Recurse -Force
 Copy-Item -LiteralPath $frontRoot -Destination (Join-Path $gameRoot 'Data/Platform') -Recurse -Force
+New-Item -ItemType Directory -Path (Join-Path $gameRoot 'Data/Platform/PluginsDev') -Force | Out-Null
 
 foreach ($dir in @('mods', 'downloads', 'overwrite', 'profiles/SkyMPTR/saves')) {
     New-Item -ItemType Directory -Path (Join-Path $moRoot $dir) -Force | Out-Null
@@ -95,6 +96,7 @@ $gameIni = Get-Content -LiteralPath (Join-Path $sourceRoot 'Skyrim_Default.ini')
 $gameIni = $gameIni.Replace('[General]', "[General]`r`nsLocalSavePath=__MO_Saves\")
 Write-LabText (Join-Path $profileRoot 'skyrim.ini') $gameIni
 $preferences = Get-Content -LiteralPath (Join-Path $sourceRoot 'Medium.ini') -Raw
+$preferences = $preferences.Replace('[General]', "[General]`r`nbFreebiesSeen=1")
 $preferences = $preferences.Replace('[Display]', "[Display]`r`nbFull Screen=0`r`nbBorderless=0`r`niSize W=1280`r`niSize H=720")
 Write-LabText (Join-Path $profileRoot 'skyrimprefs.ini') $preferences
 Write-LabText (Join-Path $profileRoot 'skyrimcustom.ini') "[General]`r`nsLocalSavePath=__MO_Saves\`r`n"

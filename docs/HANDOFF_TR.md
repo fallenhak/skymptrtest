@@ -35,7 +35,7 @@ Custom Skills Framework kullanımı, ilk demircilik deneyi ve üç perkli madenc
 
 Sunucunun başlaması tam oynanabilir altyapı anlamına gelmez. Mevcut gamemode yalnızca hazır olma işareti üretir; RP ekonomisi, karakter ekranı veya meslek içeriği sağlamaz. Başlangıç smoke testi kendi sürecini kapatır; sürekli çalışan bir hizmet kurulmadı. Elle oyun denemesi için sunucu ayrıca başlatılır; süreç kimlikleri ve günlükler yalnızca `.local` altında tutulur.
 
-1.6.1170 lab denemesinde MO2 hem Node hem SKSE için Error 5 gösterdi. Başlatma betiklerindeki `Start-Process -Wait` kaldırılıp yalnızca MO2 süreci beklendiğinde Node başlatma ve profil testi geçti. MO2 kaynak kodunun kullandığı `CREATE_BREAKAWAY_FROM_JOB` ile PowerShell bekleme grubu çakışıyordu; antivirüs ayarı değiştirilmedi. Kullanıcı MO2 kullanımına hakim ve sıradaki oyun başlatmasını elle deniyor. [Ayrıntılar](GAME_LAB_TR.md), [taşınabilir kanıt](evidence/2026-09-07-game-lab.json).
+1.6.1170 lab denemesinde MO2 hem Node hem SKSE için Error 5 gösterdi. Başlatma betiklerindeki `Start-Process -Wait` kaldırılıp yalnızca MO2 süreci beklendiğinde Node başlatma ve profil testi geçti. MO2 kaynak kodunun kullandığı `CREATE_BREAKAWAY_FROM_JOB` ile PowerShell bekleme grubu çakışıyordu; antivirüs ayarı değiştirilmedi. Kullanıcı MO2 kullanımına hakim. Elle SKSE açılışı başarılı oldu; 12:17:40’ta sunucu `1 logged as 1`, 12:18:53’te `disconnect 1` kaydetti. Skyrim Platform 2.9.0 SKSE günlüğünde doğru yüklendi. Bu, ilk native yükleme ve offline giriş kanıtıdır; kullanıcının oyun dünyasına erişimi henüz doğrulanmadı. [Ayrıntılar](GAME_LAB_TR.md), [taşınabilir kanıt](evidence/2026-09-07-game-lab.json).
 
 Makineye özgü ham çalışma dosyaları `.local` altında kalır. Taşınabilir test sonucu [evidence/2026-09-06-handoff-verification.json](evidence/2026-09-06-handoff-verification.json) dosyasında; tekrar çalıştırma [LOCAL_SERVER_TR.md](LOCAL_SERVER_TR.md) belgesindedir.
 
@@ -94,14 +94,14 @@ Kaynak bağlantıları ve semboller [SOURCE_MAP_TR.md](SOURCE_MAP_TR.md) ve [PER
 
 ## 6. Sıradaki iş ve tamamlanma ölçütü
 
-**Devam eden görev oynanabilir altyapıdır.** Hedef artık **1.6.1170**. Kullanıcının verdiği `C:\Users\kerim\Games\Faalgrin\Modlist\Stock Game` konumu bu sürümü içeriyor; mevcut indirme önbelleğinde SKSE 2.2.8 arşivi bulundu. `sources.lock.json` ve [oyun lab betikleri](GAME_LAB_TR.md) bu eşleşmeye güncellendi. Sunucu aynı lab'ın beş ESM'sini kullanmalı; Steam 1.7 verileriyle karıştırılmamalı. Önce native yükleme ve ilk bağlantı denenmeli. Kullanıcı oyun ekranını kontrol edebilir. VS 2022 kurulumu/1.7 native derlemesi şimdilik öncelik değil.
+**Devam eden görev oynanabilir altyapıdır.** Hedef artık **1.6.1170**. Kullanıcının verdiği `C:\Users\kerim\Games\Faalgrin\Modlist\Stock Game` konumu bu sürümü içeriyor; mevcut indirme önbelleğinde SKSE 2.2.8 arşivi bulundu. `sources.lock.json` ve [oyun lab betikleri](GAME_LAB_TR.md) bu eşleşmeye güncellendi. Sunucu aynı lab'ın beş ESM'sini kullanmalı; Steam 1.7 verileriyle karıştırılmamalı. Native yükleme ve ilk offline giriş kaydedildi. Şimdi CC temizliği sonrası dünyaya giriş ve istemci hata günlükleri doğrulanmalı. Kullanıcı oyun ekranını kontrol edebilir. VS 2022 kurulumu/1.7 native derlemesi şimdilik öncelik değil.
 
 | Deney | Tamamlandı sayılma koşulu | Şu an |
 | --- | --- | --- |
 | Sunucu başlangıcı | Native hazır işareti + beş ESM manifesti | Geçti |
 | İstemci kodu | TypeScript derlemesi + yerel/gateway manifest testleri | Geçti |
 | İstemci dosyaları | Ayrı oyun, SKSE/Address Library/UI ve MO2 profili | 1.6.1170 lab hazır; dosya kontrolü ve MO2 ayar/kayıt yönlendirme testi geçti |
-| İlk istemci | Bağlanma, karakter oluşturma/seçme, dünyaya girme | Bekliyor |
+| İlk istemci | Bağlanma, karakter oluşturma/seçme, dünyaya girme | Native yükleme ve profil 1 ile giriş geçti; dünyaya giriş/görünüm bekliyor |
 | İki oyuncu | Farklı profil kimlikleri; birbirini görme ve hareket | Bekliyor |
 | Temel tutarlılık | Envanter/ekipman, sonradan katılma, hücreye dönme | Bekliyor |
 | Kalıcılık | Çık-gir ve sunucu restart sonrası aynı karakter durumu | Bekliyor |
@@ -120,3 +120,13 @@ Perk modeli için öneri: karakter başına XP, seviye, puan, rank ve veri sür�
 Repo sahibi arkadaşının GitHub erişimini kendisinin düzenleyeceğini belirtti; davet işlemi bu çalışmanın dışında. Kaynak kod, betikler ve belgeler ortak repoda izlenir. Bethesda ESM/BSA dosyaları, kişisel kayıtlar, dünya verisi, token'lar ve indirilmiş binary'ler Git'e eklenmez.
 
 SkyMP sunucu AGPLv3, istemci/Platform GPLv3 ve yardımcı parçalar kendi lisanslarıyla gelir; CSF kaynağı MIT. Kaynak geliştirirken mevcut lisans/telif dosyalarını koruyun. Ayrıntılı lisans bağlantıları teknik bağlam belgesindedir. Kendi test kopyamıza oyun bileşenleri kuruldu; Faalgrin/Steam kaynak klasörlerine yazılmadı, mevcut RP sunucuları değiştirilmedi.
+
+## 9. İlk oyun açılışı ve CC temizliği — 7 Eylül
+
+- Sunucu `127.0.0.1:3000/manifest.json` üzerinden aynı beş master’ı veriyor; oyun portu 7777. İstemci ayarları profil 1 ile otomatik offline giriş yapıyor, IP yazma veya sunucu seçme ekranı gerekmiyor.
+- Kullanıcı AE indirme ekranıyla karşılaştı. MO2 `overwrite` içine dört CC paketi indi: `ccbgssse068-bloodfall`, `ccbgssse069-contest`, `ccvsvsse003-necroarts`, `ccvsvsse004-beafarmer` (her biri BSA + ESL). Skyrim/MO2 kullanıcı tarafından kapatıldıktan sonra sekiz dosya yalnızca test lab’ının `backups/cc-cleanup-20260907-122232` klasörüne taşındı. Steam/Faalgrin kopyaları değiştirilmedi; `overwrite/SKSE/Plugins/SkyrimPlatform.ini` korundu.
+- Profil `SkyrimPrefs.ini` dosyasının `[General]` bölümüne `bFreebiesSeen=1` eklendi; yükleme sırası beş master’a döndürüldü. AE indirme uyarısının kalkması bir sonraki oyun açılışında kullanıcı tarafından doğrulanmalı. İlgili ayar yeni lab hazırlama betiğine de eklendi.
+- İlk Platform günlüğü `DirectoryMonitor(Data/Platform/PluginsDev) failed with code 2` gösterdi. Eksik boş klasör oluşturuldu ve hazırlama betiğine eklendi; yeni oyun günlüğünde hata yokluğu henüz doğrulanmadı.
+- Aynı ilk günlükte `Cannot read properties of null (reading 'getFormID')` ve `Equipment.inv.entries[].count ... NUMBER_OUT_OF_RANGE` hataları vardı. Bunların CC indirmesi/ilk yüklemeyle ilişkisi kanıtlanmadı; envanter protokolünü tahminle değiştirmeyin. Temiz açılışta yeniden oluşursa istemci ekipman paketindeki gerçek count değerini ve native dönüştürme yolunu inceleyin.
+- Platform, NirnLabUIPlatform dinleyicisini bulamadı ve legacy Tilted UI backend’ine geçti. Mevcut frontend bu backend’de oyun içinde ayrıca doğrulanmalı.
+- Temizlik sonrası gerçek MO2 profil testi tekrar geçti (09:22:34 UTC). İlk açılışın SKSE/Platform günlükleri aynı yerel yedekte, temizlik kaydı lab kökünde `cc-cleanup.json`. Sunucu oyun denemesi için çalışmaya devam ediyor; PID’yi varsaymak yerine port/süreç kontrolü yapın.

@@ -38,7 +38,7 @@ Steam açıkken iki ayrı PowerShell terminalinde:
 .\scripts\start-game-lab.ps1 -ProfileId 1
 ```
 
-Başlatma betiği MO2 üzerinden SKSE'yi çalıştırır. `skse64_loader.exe` doğrudan açılırsa MO2'nin profil yönlendirmesi uygulanmaz. İstemci offline profil kimliğiyle otomatik bağlanmayı dener. UI, repodaki widget arayüzüdür; native perk menüsü geliştirmesi henüz yapılmadı.
+Başlatma betiği MO2 üzerinden SKSE'yi çalıştırır. `skse64_loader.exe` doğrudan açılırsa MO2'nin profil yönlendirmesi uygulanmaz. İstemci offline profil kimliğiyle otomatik bağlanmayı dener; IP yazmak veya bir sunucu seçme menüsü açmak gerekmez. İlk denemede profil 1 ile sunucu girişi kaydedildi; dünyaya giriş ayrıca doğrulanmalı. UI, repodaki widget arayüzüdür; native perk menüsü geliştirmesi henüz yapılmadı.
 
 Elle başlatmak için lab içindeki `mod-organizer/ModOrganizer.exe` dosyasını açın, **SkyMPTR** profilini ve **SKSE** çalıştırıcısını seçip **Çalıştır** düğmesine basın. Bu kurulumda dosyalar ayrı oyunun `Data` klasöründedir; MO2'nin sol mod listesinin boş olması beklenir. Oyun yolunun aynı lab içindeki `game` klasörü olduğunu kontrol edin.
 
@@ -63,3 +63,9 @@ Dosya kontrolü yalnızca dosyaların bulunduğunu gösterir. Gerçek aşamalar:
 Önceki 1.7.104 lab'ı `.local/skymp-756fb86/lab-player-1` altında tanılama için korundu. Orada görülen başlangıç hatası ve bekletilen kaynak yaması [native uyumluluk notunda](NATIVE_COMPATIBILITY_TR.md) kayıtlıdır.
 
 MO2 davranışı [resmi profil kodu](https://github.com/ModOrganizer2/modorganizer/blob/v2.5.2/src/profile.cpp), [komut satırı kodu](https://github.com/ModOrganizer2/modorganizer/blob/v2.5.2/src/commandline.cpp) ve sürümle gelen kaynak arşivinden kontrol edildi. Sonuçlar ve sıradaki iş için [ortak durum belgesini](HANDOFF_TR.md) okuyun.
+
+## Anniversary Edition indirme ekranı ve ek içerik
+
+Bu lab yalnızca beş temel master kullanır. `SkyrimPrefs.ini` dosyasının `[General]` bölümündeki `bFreebiesSeen=1`, AE indirme teklifinin tekrar gösterilmesini önlemek için hazırlanır. Ayarın davranışı [Step Mods INI incelemesinde](https://stepmodifications.org/wiki/Guide:SkyrimPrefs_INI/General#bFreebiesSeen) açıklanır; 1.6.1170 EXE içinde anahtar da bulundu. Bu makinede ayar eklendi, sonraki açılışta ekran sonucu bekleniyor.
+
+MO2 üzerinden yanlışlıkla indirilen CC paketleri `overwrite` içine düşebilir. Skyrim ve MO2 kapalıyken yalnızca lab’a yeni eklenen `cc*.esl/esm/esp/bsa` dosyalarını lab içindeki bir yedeğe taşıyın; bütün `overwrite` klasörünü silmeyin. Profilin yükleme sırasını beş master’a geri döndürün ve `test-game-profile.ps1` çalıştırın. İlk olayda sekiz CC dosyası yedeklendi, diğer ayarlar korundu ve profil testi geçti. Güncel hata ve doğrulama durumu HANDOFF_TR.md bölüm 9’da kayıtlıdır.

@@ -2,7 +2,7 @@
 
 SkyMP üzerinde ortak geliştirme, iki kişilik yerel testler ve RP perk/meslek sistemi denemeleri için kaynak deposu. SkyMP'nin C++/TypeScript kodu ve upstream Git geçmişi bu repoda bulunur.
 
-**Durum — 7 Eylül 2026:** Tam kaynak kodu ve ekip akışı ana dalda; istemci derlemesi ve 14 manifest testi GitHub CI'da geçti. Repodaki oyun arayüzü de yerelde derlendi. Ayrı MO2 profilinde ayar/kayıt yönlendirmesi doğrulandı. 1.7.104 oyun denemesi CommonLib sürüm tanıma hatasına ulaştı. Faalgrin'in gerçek runtime'ı 1.6.1170 olarak doğrulanınca ilk oynanabilir altyapı bu sürüme yönlendirildi. İki oyuncu ve perk etkileri henüz doğrulanmadı.
+**Durum — 7 Eylül 2026:** Tam kaynak kodu ve ekip akışı ana dalda; istemci derlemesi ve 14 manifest testi GitHub CI'da geçti. Repodaki oyun arayüzü de yerelde derlendi. Ayrı MO2 profilinde ayar/kayıt yönlendirmesi doğrulandı. 1.7.104 oyun denemesi CommonLib sürüm tanıma hatasına ulaştı. Faalgrin'in gerçek runtime'ı 1.6.1170 olarak doğrulanınca ilk oynanabilir altyapı bu sürüme yönlendirildi. 1.6.1170’te native yükleme ve ilk offline giriş kaydedildi; AE indirmesinin eklediği CC dosyaları testten çıkarılıp yedeklendi. Dünyaya giriş, iki oyuncu ve perk etkileri henüz doğrulanmadı.
 
 ## Buradan devam edin
 
