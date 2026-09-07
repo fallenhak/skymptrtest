@@ -32,3 +32,5 @@ Server startup, TypeScript compilation and manifest regression tests pass. Nativ
 The user's priority is playable infrastructure, then working perks using Skyrim's native menu, then RP professions. Custom Skills Framework is a researched candidate, not an installed dependency. Never report local perk visuals as proof of server-side effects.
 
 Use `codex/` feature branches or separate worktrees. Lab CI builds the client and runs regression tests; upstream deployment workflows are preserved outside the active workflow directory. Follow `.editorconfig`, `.clang-format` and nearby TypeScript style. Update shared status when milestones change; exclude game assets, credentials and saves from commits.
+
+After every work session, including reviews, update `docs/MODEL_BRIEFING_TR.md` with changes or findings, verification actually performed, remaining issues, and the next concrete step. Distinguish source changes from deployed artifacts and live-game verification. Preserve other contributors' context and clearly supersede outdated claims.

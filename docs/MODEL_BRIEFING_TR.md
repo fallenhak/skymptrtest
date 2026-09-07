@@ -173,6 +173,8 @@ Tüm komutlar depo kökünde (`C:\Users\kerim\Documents\ChatGPT\SkyMPTR Test`) �
 
 ## 5. Gelecek Modeller ve Geliştiriciler İçin Kritik Kurallar (Gotchas)
 
+**Zorunlu belge güncelleme kuralı:** Her model/geliştirici, inceleme dahil her çalışma sonunda bu belgeyi güncellemelidir. Yapılan değişiklik veya bulgular, gerçekten çalıştırılan kontroller ve sonuçları, kalan sorunlar ve sıradaki somut adım yazılmalıdır. Kaynak kodda bulunması, yerelde derlenmesi, dağıtım paketine girmesi ve oyun içinde doğrulanması ayrı durumlardır. Önceki kişinin bağlamı korunmalı; geçersiz kalan bilgiler açıkça düzeltilmelidir. Kullanıcının 7 Eylül tarihli isteğiyle eklendi.
+
 1. **C# 5 ve CSC Uyumluluğu:**
    - `src/launcher/Program.cs`, .NET Framework 4.0 `csc.exe` ile harici IDE veya SDK olmadan derlenir.
    - **`catch` veya `finally` blokları içinde kesinlikle `await` KULLANILAMAZ (CS1985 hatası).**
@@ -184,7 +186,7 @@ Tüm komutlar depo kökünde (`C:\Users\kerim\Documents\ChatGPT\SkyMPTR Test`) �
 4. **Sürüm Sabitlemesi (1.6.1170 vs 1.7):**
    - Lab ortamı ve Stock Game **Skyrim 1.6.1170** sürümüne sabitlenmiştir. Steam'deki 1.7.x dosyaları doğrudan çalıştırılamaz; başlatıcı otomatik olarak 1.6.1170 ikililerine downgrade eder.
 5. **Oyuncu Kimlik İzolasyonu (`profileId`):**
-   - Çok oyunculu testlerde aynı `profileId`'ye sahip istemciler aynı karakteri yönetmeye çalışır. Her oyuncunun `skymp5-client-settings.txt` içinde benzersiz bir `profileId`'si olmalıdır. Başlatıcı bunu `Guid` tabanlı otomatik üretir.
+   - Çok oyunculu testlerde aynı `profileId`'ye sahip istemciler aynı karakteri yönetmeye çalışır. Her oyuncunun `skymp5-client-settings.txt` içinde benzersiz bir `profileId`'si olmalıdır. Mevcut kod GUID kullanmıyor: `new Random().Next(10002, 99999)` kullanıp dosyada saklıyor; sunucuda çakışma kontrolü yok. Benzersizlik garanti edilmiş değildir.
 
 ---
 
@@ -198,3 +200,15 @@ Tüm komutlar depo kökünde (`C:\Users\kerim\Documents\ChatGPT\SkyMPTR Test`) �
    - Madencilik, terzilik, aşçılık gibi RP mesleklerinin sunucu mantığına eklenmesi.
 3. **Sunucu Tarafı Kalıcı Ekonomi:**
    - Para transferi, dükkanlar ve oyuncular arası ticaret.
+
+## 7. Codex kaynak incelemesi — 7 Eylül 2026
+
+İncelenen taban `b280ec9b`; önceki Codex commit'i `4d66f079` sonrasındaki değişiklikler esas alındı. **Karar: REQUEST CHANGES.** [Ayrıntılı inceleme ve düzeltme önerileri](reviews/2026-09-07-antigravity-review.md).
+
+- Launcher, sohbet, ses ve perk bileşenleri kaynakta mevcut; üstteki işlev anlatımları tamamlanmış oyun içi kabul testleri olarak okunmamalı. Bu inceleme canlı oyunu, sunucuyu veya yayımlanmış release paketlerini değiştirmedi/yeniden doğrulamadı.
+- İzole kontrollerde gamemode sohbet/perk olaylarında `userProfiles is not defined`, perk sunucusunda tanımsız `0xDEADBEEF` kabulü ve son puanla alınan perkin tekrar isteğinde ret üretildi. Oyun oturumu olmadan UDP heartbeat kaydına ses iletilebildi (sahte ağ/oyuncu nesneleriyle).
+- C# launcher kaynak kodu .NET Framework CSC ile ayrı inceleme klasörüne derlendi. Gerçek `ExtractEntryIfDifferent` metodu çağrıldığında aynı boyuttaki `new-data` yerine `old-data` kaldı. Paketleme betiğindeki `Copy-Item -LiteralPath ... '*'` ifadesinin hata verdiği küçük dosya örneğinde doğrulandı.
+- Kaynak incelemesinde ayrıca ZIP hedef yolunun sınırlandırılmadığı, 1.7 ESM'lerinin yalnızca EXE değiştirilerek 1.6 tabanıyla karıştırıldığı, temiz sunucu hazırlamanın yeni gamemode/TS sunucu çıktısını kurmadığı görüldü. Mevcut Skyrim.esm boyutları Steam'de 249752131, lab'da 249753412 bayt; kurulum eşdeğerliği varsayılamaz.
+- Öncelik: oyuncu kimliği/olay akışını tek sunucu uygulamasında bağlamak; güncelleme bütünlüğünü ve hedef yollarını düzeltmek; perk koşullarını ve tekrar isteklerini doğrulamak; ses oturumunu oyun girişine bağlamak. Sonra temiz kurulum ve iki oyuncu kabul testi.
+- Bu turda yalnızca belgeler değişti. İşlevsel hatalar henüz düzeltilmedi. Ham izole inceleme araçları `.local/review-antigravity` altında; oyun varlıkları ve test çıktısı exe Git dışında.
+- Kayıt yolu için mevcut çözüm `LocalSaves=false` ve `Saves\\` kullanıyor; eski belgelerdeki profil başına kayıt izolasyonu artık geçerli değil. Güncel test yalnızca yol hizasını doğruluyor. Kullanıcı sorunlarını paylaşınca mevcut oyun durumunu esas alarak devam edin.
