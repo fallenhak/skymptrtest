@@ -8,8 +8,10 @@ $moRoot = Join-Path $labRoot 'mod-organizer'
 foreach ($required in @('game/skse64_loader.exe', 'mod-organizer/ModOrganizer.exe', 'mod-organizer/portable.txt', 'lab-provenance.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $labRoot $required) -PathType Leaf)) { throw "Incomplete lab: $required" }
 }
-if (Get-Process SkyrimSE, skse64_loader, ModOrganizer -ErrorAction SilentlyContinue) {
-    throw 'Close the running Skyrim/SKSE/Mod Organizer session before starting this isolated test.'
+$runningInLab = @(Get-Process SkyrimSE, skse64_loader, ModOrganizer -ErrorAction SilentlyContinue |
+    Where-Object { $_.Path -and $_.Path.StartsWith($labRoot, [StringComparison]::OrdinalIgnoreCase) })
+if ($runningInLab.Count -gt 0) {
+    throw "Close the running Skyrim/SKSE/Mod Organizer session for lab-player-$ProfileId before starting."
 }
 $profileSettings = Get-Content -LiteralPath (Join-Path $moRoot 'profiles/SkyMPTR/settings.ini') -Raw
 if ($profileSettings -notmatch '(?m)^LocalSettings=true\s*$') {
@@ -23,7 +25,7 @@ function Convert-LabArgument([string]$Value) {
 }
 # Start-Process -Wait creates a job that conflicts with MO2's CREATE_BREAKAWAY_FROM_JOB.
 # Wait on MO2 itself instead; GUI executables do not reliably set LASTEXITCODE.
-$arguments = (@('--profile', 'SkyMPTR', 'run', '--cwd', $gameRoot, (Join-Path $gameRoot 'skse64_loader.exe')) |
+$arguments = (@('-m', '--profile', 'SkyMPTR', 'run', '--cwd', $gameRoot, (Join-Path $gameRoot 'skse64_loader.exe')) |
     ForEach-Object { Convert-LabArgument $_ }) -join ' '
 $process = Start-Process -FilePath (Join-Path $moRoot 'ModOrganizer.exe') -ArgumentList $arguments `
     -WorkingDirectory $moRoot -WindowStyle Hidden -PassThru
