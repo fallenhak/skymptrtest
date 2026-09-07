@@ -458,7 +458,7 @@ public class LauncherWindow {
         }
     }
 
-    private async void CheckInstallStatus() {
+    private void CheckInstallStatus() {
         if (!window.Dispatcher.CheckAccess()) {
             window.Dispatcher.Invoke(new Action(CheckInstallStatus));
             return;
@@ -469,7 +469,7 @@ public class LauncherWindow {
         string skyrimEsm = Path.Combine(dest, @"Data\Skyrim.esm");
 
         if (File.Exists(loader) && File.Exists(platform)) {
-            await CheckForServerUpdatesAsync();
+            Task.Run(async () => await CheckForServerUpdatesAsync());
         } else {
             bool hasPartial = File.Exists(skyrimEsm);
             btnMainAction.Content = hasPartial ? "KURULUMU TAMAMLA (Kaldigi Yerden)" : "KURULUMU YAP VE OYNA";
@@ -485,20 +485,28 @@ public class LauncherWindow {
     }
 
     private async Task CheckForServerUpdatesAsync() {
-        string dest = txtDestPath.Text.Trim();
-        string loader = Path.Combine(dest, "skse64_loader.exe");
-        string serverIp = txtServerIp.Text.Trim();
+        string dest = "";
+        string serverIp = "";
+        window.Dispatcher.Invoke(new Action(() => {
+            dest = txtDestPath.Text.Trim();
+            serverIp = txtServerIp.Text.Trim();
+        }));
 
         if (string.IsNullOrEmpty(serverIp)) return;
 
+        string loader = Path.Combine(dest, "skse64_loader.exe");
         if (!File.Exists(loader)) {
-            lblServerStatus.Text = "Kurulum bekleniyor...";
-            lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(141, 147, 168));
+            window.Dispatcher.Invoke(new Action(() => {
+                lblServerStatus.Text = "Kurulum bekleniyor...";
+                lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(141, 147, 168));
+            }));
             return;
         }
 
-        lblServerStatus.Text = "Sunucu kontrol ediliyor...";
-        lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(141, 147, 168));
+        window.Dispatcher.Invoke(new Action(() => {
+            lblServerStatus.Text = "Sunucu kontrol ediliyor...";
+            lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(141, 147, 168));
+        }));
 
         string url = string.Format("http://{0}:3000/modpack-version.json", serverIp);
 
@@ -518,10 +526,6 @@ public class LauncherWindow {
             serverModpackHash = ExtractJsonString(json, "hash");
             serverModpackSizeBytes = ExtractJsonLong(json, "sizeBytes");
 
-            lblServerStatus.Text = string.Format("Sunucu Aktif (Mod Paketi v{0})", serverModpackVersion);
-            lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
-
-            // Read local installed version
             string localFile = Path.Combine(dest, "installed-version.json");
             localModpackVersion = 0;
             localModpackHash = "";
@@ -533,31 +537,38 @@ public class LauncherWindow {
                 } catch { }
             }
 
-            if (serverModpackVersion > localModpackVersion || (!string.IsNullOrEmpty(serverModpackHash) && serverModpackHash != localModpackHash)) {
-                updateRequired = true;
-                btnMainAction.Content = string.Format("GUNCELLEMEYI INDIR (v{0})", serverModpackVersion);
-                btnMainAction.Background = new SolidColorBrush(Color.FromRgb(230, 126, 34)); // Turuncu
-                lblStatusText.Text = string.Format("[!] Sunucuda yeni mod paketi var (v{0}). Oyuna girmeden once guncelleyin!", serverModpackVersion);
-                lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(230, 126, 34));
-            } else {
-                updateRequired = false;
-                btnMainAction.Content = "OYUNA BASLA";
-                btnMainAction.Background = new SolidColorBrush(Color.FromRgb(39, 174, 96)); // Yesil
-                lblStatusText.Text = string.Format("[✓] Modlar sunucuyla esit ve guncel (v{0}).", localModpackVersion);
-                lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
-                progressBar.Value = 100;
-            }
-            btnReinstall.Visibility = Visibility.Visible;
-        } catch (Exception ex) {
-            lblServerStatus.Text = "Sunucu Cevrimdisi";
-            lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
-            lblStatusText.Text = string.Format("[!] Sunucuya baglanilamadi ({0}:3000): {1}", serverIp, ex.Message);
-            lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(230, 126, 34));
+            window.Dispatcher.Invoke(new Action(() => {
+                lblServerStatus.Text = string.Format("Sunucu Aktif (Mod Paketi v{0})", serverModpackVersion);
+                lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
 
-            updateRequired = false;
-            btnMainAction.Content = "OYUNA BASLA (Cevrimdisi)";
-            btnMainAction.Background = new SolidColorBrush(Color.FromRgb(70, 75, 95));
-            btnReinstall.Visibility = Visibility.Visible;
+                if (serverModpackVersion > localModpackVersion || (!string.IsNullOrEmpty(serverModpackHash) && serverModpackHash != localModpackHash)) {
+                    updateRequired = true;
+                    btnMainAction.Content = string.Format("GUNCELLEMEYI INDIR (v{0})", serverModpackVersion);
+                    btnMainAction.Background = new SolidColorBrush(Color.FromRgb(230, 126, 34));
+                    lblStatusText.Text = string.Format("[!] Sunucuda yeni mod paketi var (v{0}). Oyuna girmeden once guncelleyin!", serverModpackVersion);
+                    lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(230, 126, 34));
+                } else {
+                    updateRequired = false;
+                    btnMainAction.Content = "OYUNA BASLA";
+                    btnMainAction.Background = new SolidColorBrush(Color.FromRgb(39, 174, 96));
+                    lblStatusText.Text = string.Format("[✓] Modlar sunucuyla esit ve guncel (v{0}).", localModpackVersion);
+                    lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
+                    progressBar.Value = 100;
+                }
+                btnReinstall.Visibility = Visibility.Visible;
+            }));
+        } catch (Exception ex) {
+            window.Dispatcher.Invoke(new Action(() => {
+                lblServerStatus.Text = "Sunucu Cevrimdisi";
+                lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
+                lblStatusText.Text = string.Format("[!] Sunucuya baglanilamadi ({0}:3000): {1}", serverIp, ex.Message);
+                lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(230, 126, 34));
+
+                updateRequired = false;
+                btnMainAction.Content = "OYUNA BASLA (Cevrimdisi)";
+                btnMainAction.Background = new SolidColorBrush(Color.FromRgb(70, 75, 95));
+                btnReinstall.Visibility = Visibility.Visible;
+            }));
         }
     }
 
@@ -616,22 +627,26 @@ public class LauncherWindow {
 
         try {
             await Task.Run(() => PerformInstallation(source, dest, serverIp));
-            CheckInstallStatus();
-            MessageBox.Show("SkyMP TR kurulumu basariyla tamamlandi!\n'OYUNA BASLA' butonuna basarak sunucuya baglanabilirsiniz.", "Kurulum Basarili", MessageBoxButton.OK, MessageBoxImage.Information);
-        } catch (Exception ex) {
-            MessageBox.Show("Kurulum sirasinda bir hata olustu:\n" + ex.Message, "Kurulum Hatasi", MessageBoxButton.OK, MessageBoxImage.Error);
             window.Dispatcher.Invoke(new Action(() => {
+                CheckInstallStatus();
+                MessageBox.Show("SkyMP TR kurulumu basariyla tamamlandi!\n'OYUNA BASLA' butonuna basarak sunucuya baglanabilirsiniz.", "Kurulum Basarili", MessageBoxButton.OK, MessageBoxImage.Information);
+            }));
+        } catch (Exception ex) {
+            window.Dispatcher.Invoke(new Action(() => {
+                MessageBox.Show("Kurulum sirasinda bir hata olustu:\n" + ex.Message, "Kurulum Hatasi", MessageBoxButton.OK, MessageBoxImage.Error);
                 lblStatusText.Text = "Hata: " + ex.Message;
                 lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
             }));
         } finally {
-            isInstalling = false;
-            btnMainAction.IsEnabled = true;
-            btnBrowseSource.IsEnabled = true;
-            btnBrowseDest.IsEnabled = true;
-            btnReinstall.IsEnabled = true;
-            btnResetProfile.IsEnabled = true;
-            btnCheckServer.IsEnabled = true;
+            window.Dispatcher.Invoke(new Action(() => {
+                isInstalling = false;
+                btnMainAction.IsEnabled = true;
+                btnBrowseSource.IsEnabled = true;
+                btnBrowseDest.IsEnabled = true;
+                btnReinstall.IsEnabled = true;
+                btnResetProfile.IsEnabled = true;
+                btnCheckServer.IsEnabled = true;
+            }));
         }
     }
 
@@ -834,28 +849,34 @@ public class LauncherWindow {
                 ConfigureDisplayTweaks(dest);
             });
 
-            UpdateProgress(100, string.Format("Guncelleme tamamlandi! Mod paketi v{0} aktif.", serverModpackVersion));
-            updateRequired = false;
-            btnMainAction.Content = "OYUNA BASLA";
-            btnMainAction.Background = new SolidColorBrush(Color.FromRgb(39, 174, 96));
-            lblServerStatus.Text = string.Format("Sunucu Aktif (Mod Paketi v{0})", serverModpackVersion);
-            lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
-            lblStatusText.Text = string.Format("[✓] Modlar sunucuyla esit ve guncel (v{0}).", serverModpackVersion);
-            lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
+            window.Dispatcher.Invoke(new Action(() => {
+                UpdateProgress(100, string.Format("Guncelleme tamamlandi! Mod paketi v{0} aktif.", serverModpackVersion));
+                updateRequired = false;
+                btnMainAction.Content = "OYUNA BASLA";
+                btnMainAction.Background = new SolidColorBrush(Color.FromRgb(39, 174, 96));
+                lblServerStatus.Text = string.Format("Sunucu Aktif (Mod Paketi v{0})", serverModpackVersion);
+                lblServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
+                lblStatusText.Text = string.Format("[✓] Modlar sunucuyla esit ve guncel (v{0}).", serverModpackVersion);
+                lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(46, 204, 113));
 
-            MessageBox.Show("Mod paketi guncellemesi basariyla tamamlandi!\n'OYUNA BASLA' butonuna basarak sunucuya katilabilirsiniz.", "Guncelleme Basarili", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Mod paketi guncellemesi basariyla tamamlandi!\n'OYUNA BASLA' butonuna basarak sunucuya katilabilirsiniz.", "Guncelleme Basarili", MessageBoxButton.OK, MessageBoxImage.Information);
+            }));
         } catch (Exception ex) {
-            MessageBox.Show("Guncelleme indirilirken hata olustu:\n" + ex.Message, "Guncelleme Hatasi", MessageBoxButton.OK, MessageBoxImage.Error);
-            lblStatusText.Text = "Guncelleme hatasi: " + ex.Message;
-            lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
+            window.Dispatcher.Invoke(new Action(() => {
+                MessageBox.Show("Guncelleme indirilirken hata olustu:\n" + ex.Message, "Guncelleme Hatasi", MessageBoxButton.OK, MessageBoxImage.Error);
+                lblStatusText.Text = "Guncelleme hatasi: " + ex.Message;
+                lblStatusText.Foreground = new SolidColorBrush(Color.FromRgb(231, 76, 60));
+            }));
         } finally {
-            isInstalling = false;
-            btnMainAction.IsEnabled = true;
-            btnBrowseSource.IsEnabled = true;
-            btnBrowseDest.IsEnabled = true;
-            btnReinstall.IsEnabled = true;
-            btnResetProfile.IsEnabled = true;
-            btnCheckServer.IsEnabled = true;
+            window.Dispatcher.Invoke(new Action(() => {
+                isInstalling = false;
+                btnMainAction.IsEnabled = true;
+                btnBrowseSource.IsEnabled = true;
+                btnBrowseDest.IsEnabled = true;
+                btnReinstall.IsEnabled = true;
+                btnResetProfile.IsEnabled = true;
+                btnCheckServer.IsEnabled = true;
+            }));
         }
     }
 
